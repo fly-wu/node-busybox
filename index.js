@@ -1,3 +1,4 @@
 module.exports = {
-  utils: require('modules/utils')
+  utils: require('libs/utils'),
+  net: require('libs/net')
 }
