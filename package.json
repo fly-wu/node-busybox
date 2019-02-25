@@ -1,5 +1,5 @@
 {
-  "name": "node-tools",
-  "description": "a set of frequently used logic used for study, coding or debug",
-  "version": "5.1.2"
+  "name": "busybox",
+  "description": "frequently used tools(code)",
+  "version": "0.1.0"
 }
