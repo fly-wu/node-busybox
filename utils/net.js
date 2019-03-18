@@ -2,8 +2,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
+const localUtils = require('./local');
 
 class Net {
+  constructor(busybox) {
+    this.busybox = busybox;
+  }
+
   defaultResponse(response) {
     response.writeHead(200, {
       'Content-Type': 'html'
@@ -78,6 +83,38 @@ class Net {
     return obj;
   }
 
+  /**
+   * response for a file or dir
+   */
+//   reponseFile(filePath) {
+//     const targetFile = localUtils.findClosestFile(filePath);
+
+//     const statInfo = fs.statSync(targetFile);
+//     if (statInfo.isDirectory()) {
+//       var ul = await busyboxUtils.local.getFileListInFormatOfUl(targetFile);
+//       ctx.type = 'html';
+//       ctx.body = `<html>
+//   <head>
+//     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+//     <meta name="viewport" content="initial-scale=1, width=device-width, maximum-scale=1, user-scalable=no" />
+//     <link rel="stylesheet" href="">
+//     <title>文件列表</title>
+//     <script>
+//     window.addEventListener('load', function() {
+//     });
+//     </script>
+//     <style>
+//     </style>
+//   </head>
+//   <body>
+//     ${ul}
+//   </body>
+// </html>`
+//     } else if (statInfo.isFile()) {
+//       ctx.body = fs.createReadStream(targetFile);
+//     }
+//   }
+
   startBasicServer(cb) {
     let HTTPPORT = 0;
     let server = http.createServer((request, response) => {
@@ -97,4 +134,4 @@ class Net {
   }
 }
 
-module.exports = new Net();
+module.exports = Net;

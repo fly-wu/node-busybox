@@ -4,6 +4,9 @@ const Common = require('./common.js');
 const HOME_PATH = process.env["HOME"];
 
 class LocalUtils extends Common {
+  constructor() {
+    super();
+  }
 
   /**
    * start from @param 'dir', find one file with @param'name' upwards
@@ -44,4 +47,4 @@ class LocalUtils extends Common {
   }
 }
 
-module.exports = new LocalUtils();
+module.exports = LocalUtils;
