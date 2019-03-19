@@ -1,6 +1,6 @@
 
 const LocalUtils = require('./local.js');
-const ServerUtils = require('./net.js');
+const ServerUtils = require('./server.js');
 
 class Utils {
   constructor(busybox) {
