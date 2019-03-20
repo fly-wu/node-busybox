@@ -1,5 +1,6 @@
 const fs = require('fs');
 const os = require('os');
+const net = require('net');
 const path = require('path');
 const http = require('http');
 const stream = require('stream');
@@ -33,6 +34,38 @@ class Net {
       localIP = iface.address;
     });
     return localIP;
+  }
+
+  // 获取一个未被使用的端口（从3000端口开始）
+  async getAFreePort() {
+    async function tryPort(port) {
+      const server = net.createServer().listen(port);
+      const result = await new Promise((resolve,reject) => {
+        server.on('listening', () => {
+          server.close();
+          resolve(port);
+        });
+        server.on('error', err => {
+          if (err.code === 'EADDRINUSE') {
+            resolve(null);
+          } else {
+            resolve(err);
+          }
+        })
+      });
+      return result;
+    }
+    const START_PORT = 3000;
+    var port = START_PORT;
+    var result = await tryPort(port);
+    while (result === null) {
+      port += 1;
+      result = await tryPort(port);
+    }
+    if (result instanceof Error) {
+      result = null;
+    }
+    return result;
   }
 
   parseQueryString(qs, sep, eq, options) {
