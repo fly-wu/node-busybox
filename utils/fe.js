@@ -1,5 +1,5 @@
 const Common = require('./common.js');
-class FE  extends Common{
+class FEUtils  extends Common{
   constructor() {
     super();
   }
@@ -69,4 +69,4 @@ class FE  extends Common{
   }
 }
 
-module.exports = LocalUtils;
+module.exports = FEUtils;
