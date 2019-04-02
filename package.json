@@ -1,5 +1,8 @@
 {
   "name": "busybox",
   "description": "frequently used tools(code)",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "bin": {
+    "node-server": "./bin/node-server.js"
+  }
 }
