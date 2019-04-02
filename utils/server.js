@@ -172,6 +172,16 @@ class Net {
       console.log(`start at: http://${localIP}:${port}`);
     })
   }
+
+  getParsedUrl(request) {
+    // const 
+    var urlString = 'http://' + request.headers['host'] + request.url;
+    var obj = url.parse(urlString);
+    if (obj.query) {
+      obj.query = this.parseQueryString(obj.query);
+    }
+    return obj;
+  }
 }
 
 module.exports = Net;
