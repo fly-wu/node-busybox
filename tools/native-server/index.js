@@ -2,6 +2,7 @@ const fs = require('fs');
 const url = require('url');
 const path = require('path');
 const http = require('http');
+const Stream = require('stream');
 const compose = require('koa-compose');
 const mimeTypes = require('mime-types');
 const busybox = require('../../');
@@ -11,37 +12,14 @@ class NativeServer {
     this.STATIC_DIR = __dirname;
   }
 
-  /**
-   * 通用方法：处理静态文件
-   * @return, true(已经处理完，不需要继续处理)，false(需要后续的middleware处理)
-   */
-  async responseFile(ctx, targetFile) {
-    const {req, res} = ctx;
-    const url = req.url;
-    if (fs.existsSync(targetFile)) {
-      const statInfo = fs.statSync(targetFile);
-      if (statInfo.isDirectory() && !url.endsWith('/')) {
-        res.writeHead(301, {
-          'Location': url + '/'
-        });
-        res.end();
-        return true;
-      }
-      if (statInfo.isDirectory()) {
-        res.writeHead(200, {
-          'Content-Type': mimeTypes.contentType('html')
-        });
-      } else if (statInfo.isFile()) {
-        res.writeHead(200, {
-          'Content-Type': mimeTypes.contentType(targetFile.split('.').pop())
-        });
-      }
-      const resStream = await busybox.utils.server.getFileStream4Response(targetFile);
-      resStream.pipe(res);
-      return true;
-    } else {
-      return false;
-    }
+  resWritable(res) {
+    // can't write any more after response finished
+    if (res.finished) return false;
+    const socket = res.socket;
+    // There are already pending outgoing res, but still writable
+    // https://github.com/nodejs/node/blob/v4.4.7/lib/_http_server.js#L486
+    if (!socket) return true;
+    return socket.writable;
   }
 
   // response assets file
@@ -50,9 +28,32 @@ class NativeServer {
     const url = req.url;
     if (url.startsWith('/assets')) {
       const targetFile = busybox.utils.local.findClosestFile(__dirname, url.replace('/', ''));
-      const hasHandled = await this.responseFile(ctx, targetFile);
-      // console.log(`${targetFile}: ${hasHandled}`);
-      if (!hasHandled) {
+      if (!fs.existsSync(targetFile)) {
+        ctx.status = 200;
+        ctx.type = 'html';
+        ctx.body = `file ${url.replace('/', '')} not found`;
+        return;
+      }
+      const statInfo = fs.statSync(targetFile);
+      if (statInfo.isDirectory()) {
+        if (!url.endsWith('/')) {
+          ctx.status = 301;
+          ctx.type = 'text/plain; charset=utf-8';
+          ctx.headers['Location'] = `${url}/`;
+          ctx.body = `Redirecting to ${url}/.`;
+          return;
+        } else {
+          ctx.type = 'html';
+        }
+      } else if (statInfo.isFile()) {
+        ctx.type = targetFile.split('.').pop();
+      }
+      const fileStream = await busybox.utils.server.getFileStream4Response(targetFile);
+      // console.log(`${targetFile}: ${fileStream}`);
+      if (fileStream) {
+        ctx.status = 200;
+        ctx.body = fileStream;
+      } else {
         await next();
       }
     } else {
@@ -69,23 +70,61 @@ class NativeServer {
       file = file.replace('/', '');
     }
     const targetFile = path.resolve(this.STATIC_DIR, file);
-    const hasHandled = await this.responseFile(ctx, targetFile);
-    // console.log(`${targetFile}: ${hasHandled}`);
-    if (!hasHandled) {
+    if (!fs.existsSync(targetFile)) {
+      ctx.status = 200;
+      ctx.type = 'html';
+      ctx.body = `file ${file} not found`;
+      return;
+    }
+    const statInfo = fs.statSync(targetFile);
+    if (statInfo.isDirectory()) {
+      if (!url.endsWith('/')) {
+        ctx.status = 301;
+        ctx.type = 'text/plain; charset=utf-8';
+        ctx.headers['Location'] = `${url}/`;
+        ctx.body = `Redirecting to ${url}/.`;
+        return;
+      } else {
+        ctx.type = 'html';
+      }
+    } else if (statInfo.isFile()) {
+      ctx.type = targetFile.split('.').pop();
+    }
+    const fileStream = await busybox.utils.server.getFileStream4Response(targetFile);
+    // console.log(`${targetFile}: ${fileStream}`);
+    if (fileStream) {
+      ctx.status = 200;
+      ctx.body = fileStream;
+    } else {
       await next();
     }
   }
 
   handleRequest(req, res) {
-    const ctx = {req, res};
+    const ctx = {req, res, status: 200, type: 'json', headers: {}};
     const middleware = [this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
     const fnMiddleware = compose(middleware);
     fnMiddleware(ctx).then(() => {
-      console.log(`finish url: ${req.url}`);
-      // res.writeHead(200, {
-      //   'Content-Type': mimeTypes.contentType('html')
-      // });
-      // res.end('index page');
+      console.log(`process url: ${req.url}`);
+      if (null === ctx.body) {
+        ctx.status = 200;
+        ctx.type = 'html';
+        ctx.body = `url not found: ${req.url}`;
+      }
+      // console.log(`resWritable: ${this.resWritable(ctx.res)}`);
+      const body = ctx.body;
+      res.statusCode = ctx.status;
+      if (!ctx.headers.hasOwnProperty('Content-Type')) {
+        ctx.headers['Content-Type'] = mimeTypes.contentType(ctx.type);
+      }
+      for (let key in ctx.headers) {
+        res.setHeader(key, ctx.headers[key]);
+      }
+      if (Buffer.isBuffer(body)) return res.end(body);
+      if ('string' == typeof body) return res.end(body);
+      if (body instanceof Stream) return body.pipe(res);
+
+      // console.log(`url not found: ${req.url}`);
     }).catch(err => {
       console.log('error catched:');
       console.log(err);

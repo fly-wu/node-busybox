@@ -123,6 +123,9 @@ class Net {
     if (!targetFile) {
       return null;
     }
+    if (!fs.existsSync(targetFile)) {
+      return null;
+    }
 
     const statInfo = fs.statSync(targetFile);
     if (statInfo.isDirectory()) {
