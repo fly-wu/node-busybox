@@ -3,6 +3,7 @@
   "description": "frequently used tools(code)",
   "version": "0.1.0",
   "bin": {
-    "node-server": "./bin/node-server.js"
+    "node-server": "./bin/node-server.js",
+    "lines-count": "./bin/lines-count.js"
   }
 }
