@@ -14,6 +14,9 @@ class NativeServer {
     uploadDir: null,
   }) {
     this.STATIC_DIR = options.staticDir ? options.staticDir : process.cwd();
+    if (process.argv.length >= 3) {
+      this.STATIC_DIR = path.resolve(process.argv[2]);
+    }
     this.UPLOAD_DIR = options.uploadDir ? options.uploadDir : process.cwd();
   }
 
@@ -84,7 +87,7 @@ class NativeServer {
         fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
       });
     });
-    
+
     ctx.type = 'json';
     ctx.body = JSON.stringify(resBody);
   }
