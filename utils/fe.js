@@ -114,7 +114,15 @@
           return;
         }
 
-        var nodeToAdd = null;
+        var nodeToAdd = document.querySelector(`script[src="${path}"]`);
+        if (nodeToAdd) {
+          this._lazyLoadFiles[path] = nodeToAdd;
+        }
+        if (this._lazyLoadFiles.hasOwnProperty(path)) {
+          resolve(this._lazyLoadFiles[path]);
+          return;
+        }
+
         switch (type) {
           case 'js':
             nodeToAdd = document.createElement('script');
@@ -134,10 +142,6 @@
         }
         if (nodeToAdd === null) {
           reject(null);
-        }
-        if (this._lazyLoadFiles.hasOwnProperty(path)) {
-          resolve(this._lazyLoadFiles[path]);
-          return;
         }
 
         function onError(err) {
