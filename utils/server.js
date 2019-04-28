@@ -185,6 +185,40 @@ class Net {
     }
     return obj;
   }
+
+  /**
+   * @param {ctx}, ctx of koa
+   * @param {next}, ctx of next
+   * @param {prefix}, filter url started with prefix
+   * @param {refDir}, the start dir from which to search target file
+   */
+  async koaMiddlewareResponseStatic(ctx, next, prefix, refDir = __dirname) {
+    const url = ctx.url;
+
+    if (url.startsWith(prefix)) {
+      return await next();
+    }
+    const targetFile = this.busybox.utils.local.findClosestFile(refDir, url.replace('/', ''));
+    if (!targetFile) {
+      return await next();
+    }
+    const statInfo = fs.statSync(targetFile);
+    if (statInfo.isDirectory() && !url.endsWith('/')) {
+      ctx.redirect(`${url}/`);
+      return;
+    }
+    const resStream = await this.busybox.utils.server.getFileStream4Response(targetFile);
+    if (resStream) {
+      if (statInfo.isDirectory()) {
+        ctx.type = 'html';
+      } else if (statInfo.isFile()) {
+        ctx.type = targetFile.split('.').pop();
+      }
+      ctx.body = resStream;
+    } else {
+      return await next();
+    }
+    }
 }
 
 module.exports = Net;
