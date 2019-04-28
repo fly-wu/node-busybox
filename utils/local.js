@@ -8,6 +8,15 @@ class LocalUtils extends Common {
     super();
   }
 
+  // 等待ms毫秒
+  async waitMilliSeconds(ms) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve();
+      }, ms);
+    });
+  }
+
   /**
    * start from @param 'dir', find one file with @param'name' upwards
    * @param dir, start dir
