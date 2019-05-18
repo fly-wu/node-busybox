@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const childProcess = require('child_process');
 const Common = require('./common.js');
 const HOME_PATH = process.env["HOME"];
 
@@ -105,6 +106,25 @@ class LocalUtils extends Common {
     else
       files.push(prefix)
     return files
+  }
+
+  getModulePath(moduleName, currentPath) {
+    const pathList = [];
+    try {
+      const globalDir = path.resolve(childProcess.execSync(`which node`).toString(), '../..', 'lib/node_modules');
+      pathList.push(globalDir);
+      pathList.push(path.resolve(currentPath, 'node_modules'));
+      do {
+        currentPath = path.resolve(currentPath, '..');
+        if (!/.*node_modules$/.test(currentPath)) {
+          pathList.push(path.resolve(currentPath, 'node_modules'));
+        }
+      } while (currentPath !== HOME_PATH)
+    } catch(err) {
+      console.log(err);
+    }
+    const fullPath = pathList.map(it => path.resolve(it, moduleName)).find(it => fs.existsSync(it));
+    return fullPath;
   }
 
 }
