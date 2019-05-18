@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict'
+const path = require('path');
 
 const NativeServer = require('../tools/native-server');
 
