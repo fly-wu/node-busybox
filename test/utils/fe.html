@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="initial-scale=1, width=device-width, maximum-scale=1, user-scalable=no" />
+  <title>HTML Model</title>
+  <style type="text/css">
+  html, body {
+    margin: 0px;
+    padding: 0px;
+  }
+  .get-text-all .hidden-part-two {
+    display: none;
+  }
+  </style>
+  <script type="text/javascript" src="/utils/fe.js"></script>
+  <script>
+  window.addEventListener('load', function() {
+    const container = document.querySelector('.container');
+    const feUtils = new FEUtils();
+    console.log(feUtils.getTextAll(container.querySelector('.get-text-all')));
+  });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="get-text-all">
+      <span>for test getTextAll</span>
+      <span style="display: none">hidden part one</span>
+      <span class="hidden-part-two">hidden part two</span>
+    </div>
+  </div>
+</body>
+
+</html>

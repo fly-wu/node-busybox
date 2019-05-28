@@ -220,13 +220,118 @@
         window.location.href = destUrl;
       }
     }
+
+    // check if visible
+    isVisible(elem) {
+      if (!(elem instanceof Element)) return true;
+      const style = getComputedStyle(elem);
+      if (style.display === 'none') return false;
+      if (style.visibility !== 'visible') return false;
+      if (style.opacity < 0.1) return false;
+      if (elem.offsetWidth + elem.offsetHeight + elem.getBoundingClientRect().height +
+          elem.getBoundingClientRect().width === 0) {
+          return false;
+      }
+      const elemCenter   = {
+          x: elem.getBoundingClientRect().left + elem.offsetWidth / 2,
+          y: elem.getBoundingClientRect().top + elem.offsetHeight / 2
+      };
+      if (elemCenter.x < 0) return false;
+      if (elemCenter.x > (document.documentElement.clientWidth || window.innerWidth)) return false;
+      if (elemCenter.y < 0) return false;
+      if (elemCenter.y > (document.documentElement.clientHeight || window.innerHeight)) return false;
+      let pointContainer = document.elementFromPoint(elemCenter.x, elemCenter.y);
+      do {
+          if (pointContainer === elem) return true;
+      } while (pointContainer = pointContainer.parentNode);
+      return false;
+    }
+
+    // check if visible, simple version
+    isVisible2(elem) {
+      if (!(elem instanceof Element)) {
+        return true;
+      }
+      const style = getComputedStyle(elem);
+      if (style.display === 'none') return false;
+      if (style.visibility !== 'visible') return false;
+      if (style.opacity < 0.1) return false;
+      return true;
+    }
+
+    // 获取一个节点的文本内容
+    getNodeText(node) {
+      // console.log(!this.isVisible2(node) && ignoreHide);
+      if (!this.isVisible2(node) && ignoreHide) {
+        return '';
+      }
+      const tagName = node.tagName;
+
+      if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
+        return node.value;
+      }
+      if (['SCRIPT', 'STYLE', 'NOSCRIPT'].indexOf(node.tagName) > -1) {
+        return '';
+      }
+      if (['DIV', 'A', 'SPAN', 'B', 'LI', 'TEXT', 'I', 'TH', 'TD'].indexOf(tagName) > -1) {
+        return node.innerText;
+      }
+      return node.textContent;
+    }
+
+    // (通过递归的方式)获取node结点下的所有文本内容
+    getTextAll(node) {
+      if (!node) {
+        return '';
+      }
+      const nodeType = node.nodeType;
+      const tagName = node.tagName;
+
+      if (!this.isVisible2(node)) {
+        return '';
+      }
+
+      if (nodeType == 8) {
+        // 注释comments
+        return '';
+      } else if (['SCRIPT', 'STYLE', 'NOSCRIPT'].indexOf(tagName) > -1) {
+        // 忽略script, style, noscript中的内容
+        return '';
+      } else if('IFRAME' === tagName) {
+        // console.log(node);
+        // console.log(node.contentWindow.document.body.textContent);
+        // console.log(node.contentWindow.location.origin);
+        // 获取iframe中的内容
+        try {
+          // 处理跨域的问题
+          if (window.location.origin === node.contentWindow.location.origin) {
+            return [node.contentWindow.href, '\n'].concat(
+              Array.prototype.slice.call(node.contentWindow.document.body.childNodes).map(this.getTextAll.bind(this))
+            ).join('');
+          }
+        } catch (err) {
+          return '';
+        }
+      } else if (node.childNodes.length > 0) {
+        return Array.prototype.slice.call(node.childNodes).map(this.getTextAll.bind(this)).join('');
+      } else {
+       var content = this.getNodeText(node);
+       if (content) {
+         return content.trim() + ' ';
+       } else {
+         return '';
+       }
+      }
+    }
   }
 
   var CommonUtils = null;
   if (mode == 'browser') {
     return new Promise((resolve, reject) => {
       const utils = new FEUtils();
-      utils.lazyLoad('js', '/assets/js/utils/common.js').then(node => {
+      var commonPath = '/assets/js/utils/common.js';
+      var commonPath = '/utils/common.js';
+      utils.lazyLoad('js', commonPath).then(node => {
         if (CommonUtils) {
           FEUtils.prototype.__proto__ = new CommonUtils();
         }
