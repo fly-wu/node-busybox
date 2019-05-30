@@ -94,7 +94,7 @@ class NativeServer {
     const {req, res} = ctx;
     const url = req.url;
     if (url.startsWith('/assets')) {
-      const targetFile = busybox.utils.local.findClosestFile(__dirname, url.replace('/', ''));
+      const targetFile = busybox.utils.node.findClosestFile(__dirname, url.replace('/', ''));
       if (!fs.existsSync(targetFile)) {
         ctx.status = 200;
         ctx.type = 'html';
@@ -115,7 +115,7 @@ class NativeServer {
       } else if (statInfo.isFile()) {
         ctx.type = targetFile.split('.').pop();
       }
-      const fileStream = await busybox.utils.server.getFileStream4Response(targetFile);
+      const fileStream = await busybox.utils.node.getFileStream4Response(targetFile);
       // console.log(`${targetFile}: ${fileStream}`);
       if (fileStream) {
         ctx.status = 200;
@@ -157,7 +157,7 @@ class NativeServer {
     } else if (statInfo.isFile()) {
       ctx.type = targetFile.split('.').pop();
     }
-    const fileStream = await busybox.utils.server.getFileStream4Response(targetFile);
+    const fileStream = await busybox.utils.node.getFileStream4Response(targetFile);
     // console.log(`${targetFile}: ${fileStream}`);
     if (fileStream) {
       ctx.status = 200;
@@ -199,9 +199,9 @@ class NativeServer {
   }
 
   async start() {
-    const ip = busybox.utils.server.getLocalIP();
+    const ip = busybox.utils.node.getLocalIP();
 
-    var port = await busybox.utils.server.getAFreePort();
+    var port = await busybox.utils.node.getAFreePort();
     if (process.env.PORT) {
       port = process.env.PORT;
     }
