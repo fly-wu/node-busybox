@@ -181,14 +181,14 @@ module.exports = class NodeUtils extends Common {
   // 获取所有进程的基本信息
   async getThreadsInfoAll() {
     var processLister;
-    const props = ['pid', 'ppid', 'rss', 'vsz', 'pcpu', 'command', 'user', 'time'];
+    const props = ['pid', 'ppid', 'rss', 'vsz', 'pcpu', 'user', 'time', 'command'];
     if (process.platform === 'win32') {
       // win32 is not supported
       return [];
       // See also: https://github.com/nodejs/node-v0.x-archive/issues/2318
       // processLister = spawn('wmic.exe', ['PROCESS', 'GET', 'Name,ProcessId,ParentProcessId,Status']);
     } else {
-      // ps -A -o 'pid,ppid,rss,vsz,pcpu,command,user,time'
+      // ps -A -o 'pid,ppid,rss,vsz,pcpu,user,time,command'
       // pid:       process ID
       // ppid:      parent process ID
       // rss:       resident set size, 实际内存占用大小(单位killobytes)

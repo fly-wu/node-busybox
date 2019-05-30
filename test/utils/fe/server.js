@@ -6,7 +6,7 @@ const Stream = require('stream');
 const compose = require('koa-compose');
 const mimeTypes = require('mime-types');
 const formidable = require('formidable');
-const busybox = require('../../');
+const busybox = require('../../../');
 
 class NativeServer {
   constructor(options = {
