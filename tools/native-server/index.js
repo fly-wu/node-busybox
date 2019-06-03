@@ -169,6 +169,8 @@ class NativeServer {
 
   handleRequest(req, res) {
     const ctx = {req, res, status: 200, type: 'json', headers: {}, Url: url.parse(req.url)};
+    ctx.Url.pathname = decodeURI(ctx.Url.pathname);
+    ctx.Url.path = decodeURI(ctx.Url.path);
     const middleware = [this.parseByFormidable.bind(this), this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
     const fnMiddleware = compose(middleware);
     fnMiddleware(ctx).then(() => {
