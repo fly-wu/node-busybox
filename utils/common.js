@@ -64,6 +64,13 @@
       return String(str).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
     }
 
+    getUid() {
+      function rid() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+      }
+      return `${rid()}_${rid()}_${rid()}_${rid()}_${Date.now()}`
+    }
+
     /**
      * Check if the given variable is a function
      * @method

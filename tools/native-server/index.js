@@ -28,9 +28,9 @@ class NativeServer {
   }
 
   async parseByFormidable(ctx, next) {
-    const {req, res} = ctx;
-    const url = req.url;
-    if (!url.startsWith('/api/post')) {
+    const {req, res, Url} = ctx;
+    const pathname = Url.pathname;
+    if (!pathname.startsWith('/api/post')) {
       return await next();
     }
     const uploadDir = this.uploadDir;
@@ -91,23 +91,23 @@ class NativeServer {
 
   // response assets file
   async responseAssets(ctx, next) {
-    const {req, res} = ctx;
-    const url = req.url;
-    if (url.startsWith('/assets')) {
-      const targetFile = busybox.utils.node.findClosestFile(__dirname, url.replace('/', ''));
+    const {req, res, Url} = ctx;
+    const pathname = Url.pathname;
+    if (pathname.startsWith('/assets')) {
+      const targetFile = busybox.utils.node.findClosestFile(__dirname, pathname.replace('/', ''));
       if (!fs.existsSync(targetFile)) {
         ctx.status = 200;
         ctx.type = 'html';
-        ctx.body = `file ${url.replace('/', '')} not found`;
+        ctx.body = `file ${pathname.replace('/', '')} not found`;
         return;
       }
       const statInfo = fs.statSync(targetFile);
       if (statInfo.isDirectory()) {
-        if (!url.endsWith('/')) {
+        if (!pathname.endsWith('/')) {
           ctx.status = 301;
           ctx.type = 'text/plain; charset=utf-8';
-          ctx.headers['Location'] = `${url}/`;
-          ctx.body = `Redirecting to ${url}/.`;
+          ctx.headers['Location'] = `${pathname}/`;
+          ctx.body = `Redirecting to ${pathname}/.`;
           return;
         } else {
           ctx.type = 'html';
@@ -130,10 +130,10 @@ class NativeServer {
 
   // response static file
   async responseStaticFile(ctx, next) {
-    const {req, res} = ctx;
-    const url = req.url;
-    var file = url;
-    if (url.startsWith('/')) {
+    const {req, res, Url} = ctx;
+    const pathname = Url.pathname;
+    var file = pathname;
+    if (pathname.startsWith('/')) {
       file = file.replace('/', '');
     }
     const targetFile = path.resolve(this.STATIC_DIR, file);
@@ -145,11 +145,11 @@ class NativeServer {
     }
     const statInfo = fs.statSync(targetFile);
     if (statInfo.isDirectory()) {
-      if (!url.endsWith('/')) {
+      if (!pathname.endsWith('/')) {
         ctx.status = 301;
         ctx.type = 'text/plain; charset=utf-8';
-        ctx.headers['Location'] = `${url}/`;
-        ctx.body = `Redirecting to ${url}/.`;
+        ctx.headers['Location'] = `${pathname}/`;
+        ctx.body = `Redirecting to ${pathname}/.`;
         return;
       } else {
         ctx.type = 'html';
@@ -168,15 +168,15 @@ class NativeServer {
   }
 
   handleRequest(req, res) {
-    const ctx = {req, res, status: 200, type: 'json', headers: {}};
+    const ctx = {req, res, status: 200, type: 'json', headers: {}, Url: url.parse(req.url)};
     const middleware = [this.parseByFormidable.bind(this), this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
     const fnMiddleware = compose(middleware);
     fnMiddleware(ctx).then(() => {
-      console.log(`process url: ${req.url}`);
+      console.log(`process path: ${ctx.Url.path}`);
       if (null === ctx.body) {
         ctx.status = 200;
         ctx.type = 'html';
-        ctx.body = `url not found: ${req.url}`;
+        ctx.body = `path not found: ${Url.path}`;
       }
       // console.log(`resWritable: ${this.resWritable(ctx.res)}`);
       const body = ctx.body;
@@ -190,8 +190,6 @@ class NativeServer {
       if (Buffer.isBuffer(body)) return res.end(body);
       if ('string' == typeof body) return res.end(body);
       if (body instanceof Stream) return body.pipe(res);
-
-      // console.log(`url not found: ${req.url}`);
     }).catch(err => {
       console.log('error catched:');
       console.log(err);
