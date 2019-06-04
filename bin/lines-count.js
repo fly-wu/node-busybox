@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const busybox = require('../');
-const localUtils = busybox.utils.local;
+const nodeUtils = busybox.utils.node;
 
 var destDir = __dirname;
 if (process.argv.length >= 3) {
@@ -11,7 +11,7 @@ if (process.argv.length >= 3) {
 
 console.log(`traverse dir ${destDir}`);
 // let files = fs.readdirSync(destDir);
-let files = localUtils.readDirRecursive(destDir);
+let files = nodeUtils.readDirRecursive(destDir);
 console.log(files);
 
 let totalCount = 0;
