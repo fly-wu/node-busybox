@@ -15,6 +15,7 @@ class NativeServer {
   }) {
     this.STATIC_DIR = options.staticDir ? options.staticDir : process.cwd();
     this.UPLOAD_DIR = options.uploadDir ? options.uploadDir : process.cwd();
+    this._httpServer = null;
   }
 
   resWritable(res) {
@@ -205,17 +206,23 @@ class NativeServer {
     if (process.env.PORT) {
       port = process.env.PORT;
     }
-    // const port = 3999;
-    
-    const middleList = []
-    
-    const server = http.createServer(this.handleRequest.bind(this)).listen(port);
-    server.on('error', (err) => {
-      console.log(err);
+
+    return new Promise((resolve, reject) => {
+      const server = http.createServer(this.handleRequest.bind(this)).listen(port);
+      server.on('error', (err) => {
+        console.log(err);
+        reject(err);
+      });
+      server.on('listening', () => {
+        console.log(`start server: http://${ip}:${port}`);
+        resolve(server);
+      });
+      this._httpServer = server;
     });
-    server.on('listening', () => {
-      console.log(`start server: http://${ip}:${port}`);
-    });
+  }
+
+  get httpServer() {
+    return this._httpServer;
   }
 }
 
