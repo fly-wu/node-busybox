@@ -341,9 +341,10 @@
      * @param {path}, a.b.c
      */
     propExists(obj, path) {
-      return !!path.split('.').reduce((obj, prop) => {
-        return obj && obj.hasOwnProperty(prop) ? true : false;
-      }, obj)
+      var value = path.split('.').reduce((obj, prop) => {
+        return obj && obj.hasOwnProperty(prop) ? obj[prop] : undefined;
+      }, obj);
+      return value !== undefined;
     }
   }
 }));
