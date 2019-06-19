@@ -216,7 +216,7 @@ module.exports = class NodeUtils extends Common {
   getLocalIP() {
     var localIP = null;
     var ifaces = os.networkInterfaces();
-    var keys = ['en0', 'en1', 'en2', 'en5', 'eth0'];
+    var keys = ['en0', 'en1', 'en2', 'en3', 'en4', 'en5', 'em0', 'em1', 'em2', 'em3', 'em4', 'em5', 'eth0'];
     let iface = [];
     keys.forEach(function(key) {
       if ((key in ifaces) && (Array.isArray(ifaces[key]))) {
