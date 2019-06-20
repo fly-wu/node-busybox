@@ -154,34 +154,28 @@ class NativeServer {
       });
     });
 
-    const resBody = {};
-    resBody.fields = multipart.fields;
-    resBody.files = {};
 
-    // mkdir uploads if necessary
     var fileList = [];
     Object.keys(multipart.files).forEach(key => {
       fileList = fileList.concat(multipart.files[key]);
     });
+
     if (fileList.length > 0) {
       const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
+      // mkdir uploads if necessary
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir);
       }
-    }
-
-    // save files to local
-    Object.keys(multipart.files).forEach(key => {
-      resBody.files[key] = [];
-      const fileList = multipart.files[key];
       fileList.forEach(file => {
-        resBody.files[key].push(file.name);
         var ext = path.extname(file.name);
         ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
         fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
       });
-    });
+    }
 
+    const resBody = {};
+    resBody.fields = multipart.fields;
+    resBody.files = multipart.files;
     ctx.type = 'json';
     ctx.body = JSON.stringify(resBody);
   }
