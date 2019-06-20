@@ -28,6 +28,111 @@ class NativeServer {
     return socket.writable;
   }
 
+  getCorsMiddleware(options) {
+    options = options || {};
+    var defaults = {
+      origin: true,
+      methods: 'GET,HEAD,PUT,POST,DELETE'
+    };
+    // Set defaults
+    for (var key in defaults) {
+      if (!options.hasOwnProperty(key)) {
+        options[key] = defaults[key];
+      }
+    }
+    // Set expose
+    if (Array.isArray(options.expose)) {
+      options.expose = options.expose.join(',');
+    }
+    // Set maxAge
+    if (typeof options.maxAge === 'number') {
+      options.maxAge = options.maxAge.toString();
+    } else {
+      options.maxAge = null;
+    }
+    // Set methods
+    if (Array.isArray(options.methods)) {
+      options.methods = options.methods.join(',');
+    }
+    // Set headers
+    if (Array.isArray(options.headers)) {
+      options.headers = options.headers.join(',');
+    }
+    return async function cors(ctx, next) {
+      /**
+       * Access Control Allow Origin
+       */
+      var origin;
+
+      if (typeof options.origin === 'string') {
+        origin = options.origin;
+      } else if (options.origin === true) {
+        origin = ctx.req.headers['origin'] || '*';
+      } else if (options.origin === false) {
+        origin = options.origin;
+      } else if (typeof options.origin === 'function') {
+        origin = options.origin(ctx.req);
+      }
+
+      if (origin === false) {
+        await next();
+        return;
+      }
+
+      ctx.headers['Access-Control-Allow-Origin'] = origin;
+
+      /**
+       * Access Control Expose Headers
+       */
+      if (options.expose) {
+        ctx.headers['Access-Control-Expose-Headers'] = options.expose;
+      }
+
+      /**
+       * Access Control Max Age
+       */
+      if (options.maxAge) {
+        ctx.headers['Access-Control-Max-Age'] = options.maxAge;
+      }
+
+      /**
+       * Access Control Allow Credentials
+       */
+      if (options.credentials === true) {
+        ctx.headers['Access-Control-Allow-Credentials'] = 'true';
+      }
+
+      /**
+       * Access Control Allow Methods
+       */
+      ctx.headers['Access-Control-Allow-Methods'] = options.methods;
+
+      /**
+       * Access Control Allow Headers
+       */
+      var headers;
+
+      if (options.headers) {
+        headers = options.headers;
+      } else {
+        headers = ctx.req.headers['access-control-request-headers'];
+      }
+
+      if (headers) {
+        ctx.headers['Access-Control-Allow-Headers'] = headers;
+      }
+
+      /**
+       * Returns
+       */
+      if (ctx.req.method === 'OPTIONS') {
+        ctx.status = 204;
+      } else {
+        await next();
+      }
+    };
+  }
+
   async parseByFormidable(ctx, next) {
     const {req, res, Url} = ctx;
     const pathname = Url.pathname;
@@ -172,7 +277,7 @@ class NativeServer {
     const ctx = {req, res, status: 200, type: 'json', headers: {}, Url: url.parse(req.url)};
     ctx.Url.pathname = decodeURI(ctx.Url.pathname);
     ctx.Url.path = decodeURI(ctx.Url.path);
-    const middleware = [this.parseByFormidable.bind(this), this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
+    const middleware = [this.getCorsMiddleware(), this.parseByFormidable.bind(this), this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
     const fnMiddleware = compose(middleware);
     fnMiddleware(ctx).then(() => {
       console.log(`process path: ${ctx.Url.path}`);
