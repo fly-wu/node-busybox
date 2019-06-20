@@ -58,12 +58,11 @@ class NativeServer {
     if (Array.isArray(options.headers)) {
       options.headers = options.headers.join(',');
     }
-    return async function cors(ctx, next) {
+    return async function(ctx, next) {
       /**
        * Access Control Allow Origin
        */
       var origin;
-
       if (typeof options.origin === 'string') {
         origin = options.origin;
       } else if (options.origin === true) {
@@ -80,48 +79,40 @@ class NativeServer {
       }
 
       ctx.headers['Access-Control-Allow-Origin'] = origin;
-
       /**
        * Access Control Expose Headers
        */
       if (options.expose) {
         ctx.headers['Access-Control-Expose-Headers'] = options.expose;
       }
-
       /**
        * Access Control Max Age
        */
       if (options.maxAge) {
         ctx.headers['Access-Control-Max-Age'] = options.maxAge;
       }
-
       /**
        * Access Control Allow Credentials
        */
       if (options.credentials === true) {
         ctx.headers['Access-Control-Allow-Credentials'] = 'true';
       }
-
       /**
        * Access Control Allow Methods
        */
       ctx.headers['Access-Control-Allow-Methods'] = options.methods;
-
       /**
        * Access Control Allow Headers
        */
       var headers;
-
       if (options.headers) {
         headers = options.headers;
       } else {
         headers = ctx.req.headers['access-control-request-headers'];
       }
-
       if (headers) {
         ctx.headers['Access-Control-Allow-Headers'] = headers;
       }
-
       /**
        * Returns
        */
@@ -134,8 +125,8 @@ class NativeServer {
   }
 
   async parseByFormidable(ctx, next) {
-    const {req, res, Url} = ctx;
-    const pathname = Url.pathname;
+    const {req, res, urlObj} = ctx;
+    const pathname = urlObj.pathname;
     if (!pathname.startsWith('/api/post')) {
       return await next();
     }
@@ -197,8 +188,8 @@ class NativeServer {
 
   // response assets file
   async responseAssets(ctx, next) {
-    const {req, res, Url} = ctx;
-    const pathname = Url.pathname;
+    const {req, res, urlObj} = ctx;
+    const pathname = urlObj.pathname;
     if (pathname.startsWith('/assets')) {
       const targetFile = busybox.utils.node.findClosestFile(__dirname, pathname.replace('/', ''));
       if (!fs.existsSync(targetFile)) {
@@ -236,8 +227,8 @@ class NativeServer {
 
   // response static file
   async responseStaticFile(ctx, next) {
-    const {req, res, Url} = ctx;
-    const pathname = Url.pathname;
+    const {req, res, urlObj} = ctx;
+    const pathname = urlObj.pathname;
     var file = pathname;
     if (pathname.startsWith('/')) {
       file = file.replace('/', '');
@@ -274,17 +265,17 @@ class NativeServer {
   }
 
   handleRequest(req, res) {
-    const ctx = {req, res, status: 200, type: 'json', headers: {}, Url: url.parse(req.url)};
-    ctx.Url.pathname = decodeURI(ctx.Url.pathname);
-    ctx.Url.path = decodeURI(ctx.Url.path);
+    const ctx = {req, res, status: 200, type: 'json', headers: {}, urlObj: url.parse(req.url), body: null};
+    ctx.urlObj.pathname = decodeURI(ctx.urlObj.pathname);
+    ctx.urlObj.path = decodeURI(ctx.urlObj.path);
     const middleware = [this.getCorsMiddleware(), this.parseByFormidable.bind(this), this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
     const fnMiddleware = compose(middleware);
     fnMiddleware(ctx).then(() => {
-      console.log(`process path: ${ctx.Url.path}`);
+      console.log(`process path: ${ctx.urlObj.path}`);
       if (null === ctx.body) {
         ctx.status = 200;
         ctx.type = 'html';
-        ctx.body = `path not found: ${Url.path}`;
+        ctx.body = `path not found: ${ctx.urlObj.path}`;
       }
       // console.log(`resWritable: ${this.resWritable(ctx.res)}`);
       const body = ctx.body;
@@ -295,6 +286,7 @@ class NativeServer {
       for (let key in ctx.headers) {
         res.setHeader(key, ctx.headers[key]);
       }
+      if (body === null) return res.end();
       if (Buffer.isBuffer(body)) return res.end(body);
       if ('string' == typeof body) return res.end(body);
       if (body instanceof Stream) return body.pipe(res);
