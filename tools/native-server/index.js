@@ -124,17 +124,42 @@ class NativeServer {
     };
   }
 
+  getStreamData(req) {
+    return new Promise((resolve, reject) => {
+      var bufferList = [];
+      req.on('data', function(chunk){
+        // console.log(chunk);
+        // result += chunk;
+        bufferList.push(chunk);
+      });
+      req.on('end', function() {
+        resolve(Buffer.concat(bufferList));
+      });
+      req.on('error', function(err) {
+        reject(err);
+      })
+    })
+  }
+
   async parseByFormidable(ctx, next) {
     const {req, res, urlObj} = ctx;
     const pathname = urlObj.pathname;
     if (!pathname.startsWith('/api/post')) {
       return await next();
     }
+
+    if (false) {
+      this.getStreamData(ctx.req).then(buf => {
+        console.log(buf.toString());
+      });
+    }
+
     const uploadDir = this.uploadDir;
 
     var form = new formidable.IncomingForm({
       uploadDir,
       keepExtensions: true,
+      multiples: true,
       hash: 'md5'
     });
 
@@ -153,7 +178,7 @@ class NativeServer {
         }
       });
     });
-
+    // console.log(multipart);
 
     var fileList = [];
     Object.keys(multipart.files).forEach(key => {
@@ -172,6 +197,7 @@ class NativeServer {
         fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
       });
     }
+    // console.log(fileList);
 
     const resBody = {};
     resBody.fields = multipart.fields;
