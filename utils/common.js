@@ -346,6 +346,15 @@
       }, obj);
       return value !== undefined;
     }
+
+    // 等待ms毫秒
+    async waitAMoment(ms) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, ms);
+      });
+    }
   }
 }));
 
