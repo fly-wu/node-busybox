@@ -141,17 +141,22 @@ class NativeServer {
     })
   }
 
+  async echoPost(ctx, next) {
+    const {req, res, urlObj} = ctx;
+    const pathname = urlObj.pathname;
+    if (pathname !== '/api/post/echo' || req.method.toUpperCase() !== 'POST') {
+      return await next();
+    }
+    const buf = await this.getStreamData(ctx.req);
+    ctx.type = 'buffer';
+    ctx.body = buf;
+  }
+
   async parseByFormidable(ctx, next) {
     const {req, res, urlObj} = ctx;
     const pathname = urlObj.pathname;
     if (!pathname.startsWith('/api/post')) {
       return await next();
-    }
-
-    if (false) {
-      this.getStreamData(ctx.req).then(buf => {
-        console.log(buf.toString());
-      });
     }
 
     const uploadDir = this.uploadDir;
@@ -288,7 +293,13 @@ class NativeServer {
     const ctx = {req, res, status: 200, type: 'json', headers: {}, urlObj: url.parse(req.url), body: null};
     ctx.urlObj.pathname = decodeURI(ctx.urlObj.pathname);
     ctx.urlObj.path = decodeURI(ctx.urlObj.path);
-    const middleware = [this.getCorsMiddleware(), this.parseByFormidable.bind(this), this.responseAssets.bind(this), this.responseStaticFile.bind(this)];
+    const middleware = [
+      this.getCorsMiddleware(),
+      this.echoPost.bind(this),
+      this.parseByFormidable.bind(this),
+      this.responseAssets.bind(this),
+      this.responseStaticFile.bind(this)
+    ];
     const fnMiddleware = compose(middleware);
     fnMiddleware(ctx).then(() => {
       console.log(`process path: ${ctx.urlObj.path}`);
