@@ -447,4 +447,21 @@ module.exports = class NodeUtils extends Common {
       return await next();
     }
   }
+
+  getStreamData(req) {
+    return new Promise((resolve, reject) => {
+      var bufferList = [];
+      req.on('data', function(chunk){
+        // console.log(chunk);
+        // result += chunk;
+        bufferList.push(chunk);
+      });
+      req.on('end', function() {
+        resolve(Buffer.concat(bufferList));
+      });
+      req.on('error', function(err) {
+        reject(err);
+      })
+    })
+  }
 }
