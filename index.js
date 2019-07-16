@@ -9,15 +9,16 @@ class BusyBox {
   }
 
   addModulesInDirNodeModules() {
-    const MODULE_PATH = path.resolve(__dirname, 'node_modules');
-    fs.readdirSync(MODULE_PATH)
+    const NODE_MODULES_PATH = path.resolve(__dirname, 'node_modules');
+    this.NODE_MODULES_PATH = NODE_MODULES_PATH;
+    fs.readdirSync(NODE_MODULES_PATH)
       .filter(it => {
-        const fullPath = path.resolve(MODULE_PATH, it);
+        const fullPath = path.resolve(NODE_MODULES_PATH, it);
         // only scan directory
         return !it.startsWith('.') && fs.statSync(fullPath).isDirectory()
       })
       .forEach(it => {
-        const fullPath = path.resolve(MODULE_PATH, it);
+        const fullPath = path.resolve(NODE_MODULES_PATH, it);
         // console.log(`import model from file ${fullPath}...`);
         this[it] = require(fullPath);
       });

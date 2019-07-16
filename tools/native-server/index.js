@@ -13,8 +13,9 @@ class NativeServer {
     staticDir: null,
     uploadDir: null,
   }) {
-    this.STATIC_DIR = options.staticDir ? options.staticDir : process.cwd();
-    this.UPLOAD_DIR = options.uploadDir ? options.uploadDir : process.cwd();
+    this.CURRENT_WORK_DIR = process.cwd();
+    this.STATIC_DIR = options.staticDir ? options.staticDir : this.CURRENT_WORK_DIR;
+    this.UPLOAD_DIR = options.uploadDir ? options.uploadDir : this.CURRENT_WORK_DIR;
     this._httpServer = null;
   }
 
@@ -216,7 +217,7 @@ class NativeServer {
     const {req, res, urlObj} = ctx;
     const pathname = urlObj.pathname;
     if (pathname.startsWith('/assets')) {
-      const targetFile = busybox.utils.node.findClosestFile(__dirname, pathname.replace('/', ''));
+      const targetFile = busybox.utils.node.findClosestFile(this.CURRENT_WORK_DIR, pathname.replace('/', ''));
       if (!fs.existsSync(targetFile)) {
         ctx.status = 200;
         ctx.type = 'html';
