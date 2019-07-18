@@ -32,7 +32,7 @@ const Debug = busybox['debug'];
 Debug.getState().setConfigs({
   debug: '*',
   useColors: true,
-  toFile: path.resolve(__dirname, 'proxy.log')
+  toFile: path.resolve(__dirname, 'logs/proxy.log')
 });
 debug = Debug('penetrate-fortress');
 
@@ -87,19 +87,19 @@ class Helper {
     debug.apply(null, Array.prototype.slice.call(arguments));
   }
 
-  proxy87_6001() {
+  proxy103_6001() {
     const proxyOptions = {
-      target: 'http://172.31.160.87:6001',
+      target: 'http://172.31.160.103:6001',
       changeOrigin: true
     }
     var server = http.createServer((req, res) => {
       this.proxy.web(req, res, proxyOptions);
-    }).listen(6101);
+    }).listen(6001);
   }
 
-  proxy85_6001() {
+  proxy106_6001() {
     const proxyOptions = {
-      target: 'http://172.31.160.85:6001',
+      target: 'http://172.31.160.106:6001',
       changeOrigin: true
     }
     var server = http.createServer((req, res) => {
@@ -107,7 +107,7 @@ class Helper {
     }).listen(6003);
   }
 
-  proxy143_30334() {
+  proxy103_30334() {
     const proxyOptions = {
       target: 'http://10.10.202.143:30334',
       changeOrigin: true
@@ -118,9 +118,8 @@ class Helper {
   }
 
   start() {
-    this.proxy87_6001();
-    this.proxy85_6001();
-    this.proxy143_30334();
+    this.proxy103_6001();
+    this.proxy106_6001();
   }
 }
 
