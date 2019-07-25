@@ -146,8 +146,8 @@ module.exports = class NodeUtils extends Common {
     return results;
   }
 
-  // 获取所有进程的基本信息
-  async getThreadsInfoAll() {
+  // get stream returned by command
+  spawnCmdPS() {
     var processLister;
     const props = ['pid', 'ppid', 'rss', 'vsz', 'pcpu', 'user', 'time', 'command'];
     if (process.platform === 'win32') {
@@ -166,7 +166,12 @@ module.exports = class NodeUtils extends Common {
       // time:      user + system
       processLister = childProcess.spawn('ps', ['-A', '-o', props.join(',')]);
     }
-
+    return processLister;
+  }
+  // 获取所有进程的基本信息
+  async getThreadsInfoAll() {
+    const props = ['pid', 'ppid', 'rss', 'vsz', 'pcpu', 'user', 'time', 'command'];
+    const processLister = this.spawnCmdPS();
     return new Promise((resolve, reject) => {
       const bufList = [];
       processLister.stdout.on('data', (data) => {
@@ -199,12 +204,50 @@ module.exports = class NodeUtils extends Common {
     });
   }
 
+  // kill pid and its childpid
+  async killByPid(pid, killTree = true) {
+    const threadsInfo = await this.getThreadsInfoAll();
+    const mainThread = threadsInfo.find(it => it.pid == pid);
+    if (!mainThread) {
+      return Promise.reject(`no thread with pid ${pid}`);
+    }
+    const pidKilled = [];
+    const kill = (thread) => {
+      pidKilled.push(thread.pid);
+      process.kill(thread.pid, 'SIGTERM');
+    }
+    const traverseFind = (thread) => {
+      if (!thread.hasOwnProperty('children')) {
+        var children = threadsInfo.filter(it => it.ppid == thread.pid);
+        if (children.length > 0) {
+          thread.children = children;
+          children.forEach(traverseFind);
+        }
+      }
+    }
+    const traverseKill = (thread) => {
+      if (thread.hasOwnProperty('children')) {
+        thread.children.forEach(traverseKill);
+        delete thread.children;
+        traverseKill(thread);
+      } else {
+        kill(thread);
+      }
+    }
+    if (killTree) {
+      traverseFind(mainThread);
+      traverseKill(mainThread);
+    } else {
+      kill(mainThread);
+    }
+    return pidKilled;
+  }
+
   // 通过pid获取线程基本信息
   async getThreadInfoByPid(pid) {
     const threadsInfoList = await this.getThreadsInfoAll();
     return threadsInfoList.find(it => it.pid == pid);
   }
-
 
   defaultResponse(response) {
     response.writeHead(200, {
