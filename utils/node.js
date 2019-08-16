@@ -307,54 +307,6 @@ module.exports = class NodeUtils extends Common {
     return result;
   }
 
-  parseQueryString(qs, sep, eq, options) {
-    sep = sep || '&';
-    eq = eq || '=';
-    var obj = {};
-    if (typeof qs !== 'string' || qs.length === 0) {
-      return obj;
-    }
-    try {
-      var regexp = /\+/g;
-      qs = qs.split(sep);
-      var maxKeys = 1000;
-      if (options && typeof options.maxKeys === 'number') {
-        maxKeys = options.maxKeys;
-      }
-      var len = qs.length;
-      // maxKeys <= 0 means that we should not limit keys count
-      if (maxKeys > 0 && len > maxKeys) {
-        len = maxKeys;
-      }
-      for (var i = 0; i < len; ++i) {
-        var x = qs[i].replace(regexp, '%20'),
-          idx = x.indexOf(eq),
-          kstr, vstr, k, v;
-        if (idx >= 0) {
-          kstr = x.substr(0, idx);
-          vstr = x.substr(idx + 1);
-        } else {
-          kstr = x;
-          vstr = '';
-        }
-        k = decodeURIComponent(kstr);
-        v = decodeURIComponent(vstr);
-        if (!obj.hasOwnProperty(k)) {
-          obj[k] = v;
-        } else if (Array.isArray(obj[k])) {
-          obj[k].push(v);
-        } else {
-          obj[k] = [obj[k], v];
-        }
-      }
-    } catch (error) {
-      console.log('error in parseQueryString:');
-      console.log(error);
-      obj = {};
-    }
-    return obj;
-  }
-
   // return file list in the form of <ul><li></li></ul>
   getFileListInFormatOfUl(dir) {
     return new Promise((resolve, reject) => {
@@ -505,6 +457,46 @@ module.exports = class NodeUtils extends Common {
       req.on('error', function(err) {
         reject(err);
       })
+    })
+  }
+
+  /**
+   * @param {data}, String or Object
+   */
+  toStream(data) {
+    if (this.isObject(data)) {
+      data = JSON.stringify(data);
+    }
+    if (!this.isString(data)) {
+      conosle.log(`warning: data is not string`);
+    }
+    return new stream.Readable({
+      read() {
+        this.push(data);
+        this.push(null);
+      }
+    });
+  }
+
+  slowStream(chunkSize = 1024, wait = 500) {
+    return new stream.Transform({
+      async transform(data, enc, next) {
+        const dataSize = data.length;
+        var pos = 0;
+        var chunk = null;
+        while (pos < dataSize) {
+          var size = chunkSize;
+          if (pos + chunkSize > dataSize) {
+            size = dataSize - pos;
+          }
+          chunk = Buffer.alloc(size);
+          data.copy(chunk, 0, pos, pos + size);
+          await busybox.utils.node.waitMilliSeconds(wait);
+          this.push(chunk);
+          pos += size;
+        }
+        next();
+      }
     })
   }
 }

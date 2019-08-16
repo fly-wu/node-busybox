@@ -323,6 +323,62 @@
        }
       }
     }
+
+    async readBlobAsText(file) {
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.readAsText(file);
+        reader.onload = function() {
+          var result = reader.result;
+          resolve(result);
+        }
+        reader.onerror = function(e) {
+          reject(e)
+        }
+      })
+    }
+
+    async readBlobAsArrayBuffer(blob) {
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.readAsArrayBuffer(blob);
+        reader.onload = function() {
+          var result = reader.result;
+          resolve(result);
+        }
+        reader.onerror = function(e) {
+          reject(e)
+        }
+      })
+    }
+
+    async readBlobAsDataURL(file) {
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.readAsDataURL(file);
+        reader.onload = function() {
+          var result = reader.result;
+          resolve(result);
+        }
+        reader.onerror = function(e) {
+          reject(e)
+        }
+      })
+    }
+
+    async readBlobAsBinaryString(file) {
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.readAsBinaryString(file);
+        reader.onload = function() {
+          var result = reader.result;
+          resolve(result);
+        }
+        reader.onerror = function(e) {
+          reject(e)
+        }
+      })
+    }
   }
 
   var CommonUtils = null;
