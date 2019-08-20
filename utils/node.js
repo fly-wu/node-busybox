@@ -308,52 +308,43 @@ module.exports = class NodeUtils extends Common {
   }
 
   // return file list in the form of <ul><li></li></ul>
-  getFileListInFormatOfUl(dir) {
-    return new Promise((resolve, reject) => {
-      try {
-        const fileList = fs.readdirSync(dir);
-        const liList = Array.prototype.slice.call(fileList).map((it) => {
-          var item = '';
-          // // pass hidden file
-          // if (it.startsWith('.')) {
-          //   return item;
-          // }
-          const statInfo = fs.statSync(dir + '/' + it);
-          if (statInfo.isDirectory()) {
-            // item = '<li><a href="' + it + '/">' + it + '/</a></li>';
-            item = `<li><a href="${it}/">${it}/</a></li>`;
-          } else if (statInfo.isFile()) {
-            // item = '<li><a href="' + it + '">' + it + '</a></li>';
-            item = `<li><a href="${it}">${it}</a></li>`;
-          } else {
-            // item = '<li style="color: red"><a href="' + it + '">' + it + '</a></li>';
-            item = `<li style="color: red"><a href="${it}">${it}</a></li>`;
-          }
-          return item;
-        });
-        const ul = ['<ul>', ...liList, '</ul>'].join('');
-        resolve(ul);
-      } catch (err) {
-        reject(err);
+  getFileListInFormOfUl(dir, filter) {
+    filter = filter || (x => x[0] !== '.')
+    try {
+      var stat = fs.statSync(dir);
+      if (!stat.isDirectory()) {
+        throw new Error('not a directory');
       }
-    });
+      const fileList = fs.readdirSync(dir);
+      const liList = Array.prototype.slice.call(fileList).filter(filter).map((it) => {
+        var item = '';
+        // // pass hidden file
+        // if (it.startsWith('.')) {
+        //   return item;
+        // }
+        const statInfo = fs.statSync(dir + '/' + it);
+        if (statInfo.isDirectory()) {
+          // item = '<li><a href="' + it + '/">' + it + '/</a></li>';
+          item = `<li><a href="${it}/">${it}/</a></li>`;
+        } else if (statInfo.isFile()) {
+          // item = '<li><a href="' + it + '">' + it + '</a></li>';
+          item = `<li><a href="${it}">${it}</a></li>`;
+        } else {
+          // item = '<li style="color: red"><a href="' + it + '">' + it + '</a></li>';
+          item = `<li style="color: red"><a href="${it}">${it}</a></li>`;
+        }
+        return item;
+      });
+      const ul = ['<ul>', ...liList, '</ul>'].join('');
+      return ul;
+    } catch (err) {
+      return err.message;
+    }
   }
 
-  /**
-   * response for a file or dir
-   */
-  async getFileStream4Response(targetFile) {
-    if (!targetFile) {
-      return null;
-    }
-    if (!fs.existsSync(targetFile)) {
-      return null;
-    }
-
-    const statInfo = fs.statSync(targetFile);
-    if (statInfo.isDirectory()) {
-      const ul = await this.getFileListInFormatOfUl(targetFile);
-      const body = `<html>
+  getDirContentInFormOfHtml(dir, filter) {
+    const ul = this.getFileListInFormOfUl(dir, filter);
+    return `<html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="initial-scale=1, width=device-width, maximum-scale=1, user-scalable=no" />
@@ -369,7 +360,23 @@ module.exports = class NodeUtils extends Common {
   <body>
     ${ul}
   </body>
-</html>`;
+</html>`
+  }
+
+  /**
+   * response for a file or dir
+   */
+  async getFileContentInFormOfStream(targetFile) {
+    if (!targetFile) {
+      return null;
+    }
+    if (!fs.existsSync(targetFile)) {
+      return null;
+    }
+
+    const statInfo = fs.statSync(targetFile);
+    if (statInfo.isDirectory()) {
+      const body = this.getDirContentInFormOfHtml(targetFile);
       return new stream.Readable({
         read() {
           this.push(body);
@@ -478,7 +485,9 @@ module.exports = class NodeUtils extends Common {
     });
   }
 
+  // TODO: fix stream.push() after EOF
   slowStream(chunkSize = 1024, wait = 500) {
+    var self = this;
     return new stream.Transform({
       async transform(data, enc, next) {
         const dataSize = data.length;
@@ -491,12 +500,56 @@ module.exports = class NodeUtils extends Common {
           }
           chunk = Buffer.alloc(size);
           data.copy(chunk, 0, pos, pos + size);
-          await busybox.utils.node.waitMilliSeconds(wait);
+          await self.waitMilliSeconds(wait);
           this.push(chunk);
           pos += size;
         }
         next();
       }
     })
+  }
+
+
+  async showRequestProcess(config = {}) {
+    config = this.deepMerge({
+      path: '/',
+      method: 'get',
+      headers: {
+        accept: '*/*'
+      }
+    }, config);
+
+    const axios = require('axios');
+    const net = new axios.Helper({
+      headers: {
+        common: {
+          tag: 'request from busybox.utils.node.showResponse'
+        }
+      }
+    });
+    var axiosResponse = null;
+    try {
+      axiosResponse = await net.requestAxiosResponse(config);
+    } catch(err) {
+      if (err.isAxiosError) {
+        axiosResponse = err.response;
+        if (!axiosResponse) {
+          console.log(err);
+        }
+      } else {
+      }
+    }
+    if (axiosResponse) {
+      console.log(' ------ ');
+      console.log('request headers:');
+      console.log(axiosResponse.request.getHeaders());
+      console.log('response:');
+      console.log(`${axiosResponse.status} ${axiosResponse.statusText}`);
+      console.log(axiosResponse.headers);
+      console.log(axiosResponse.data.length > 1000 ? axiosResponse.data.substring(0, 1000) : axiosResponse.data);
+    } else {
+      console.log(`axiosResponse is null`);
+    }
+    return axiosResponse;
   }
 }
