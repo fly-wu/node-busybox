@@ -238,7 +238,7 @@ class NativeServer {
       } else if (statInfo.isFile()) {
         ctx.type = targetFile.split('.').pop();
       }
-      const fileStream = await busybox.utils.node.getFileStream4Response(targetFile);
+      const fileStream = await busybox.utils.node.getFileContentInFormOfStream(targetFile);
       // console.log(`${targetFile}: ${fileStream}`);
       if (fileStream) {
         ctx.status = 200;
@@ -280,7 +280,7 @@ class NativeServer {
     } else if (statInfo.isFile()) {
       ctx.type = targetFile.split('.').pop();
     }
-    const fileStream = await busybox.utils.node.getFileStream4Response(targetFile);
+    const fileStream = await busybox.utils.node.getFileContentInFormOfStream(targetFile);
     // console.log(`${targetFile}: ${fileStream}`);
     if (fileStream) {
       ctx.status = 200;
