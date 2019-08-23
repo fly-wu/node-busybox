@@ -94,8 +94,11 @@
       return this.isObject(val) && this.isFunction(val.pipe);
     }
 
-    isArray(val) {
-      return toString.call(val) === '[object Array]';
+    isArray(arr) {
+      if (typeof Array.isArray === 'function') {
+        return Array.isArray(arr);
+      }
+      return toString.call(arr) === '[object Array]';
     }
 
     isArrayBuffer(val) {

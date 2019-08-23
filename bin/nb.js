@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const childProcess = require('child_process');
+const crypto = require('crypto');
 const busybox = require('../');
 const commander = busybox.commander;
 const nodeUtils = busybox.utils.node;
@@ -24,6 +25,11 @@ commander.command('kill <pid>').action(async (pid) => {
   // cmdPS.stdout.pipe(process.stdout);
   // cmdPS.stderr.pipe(process.stderr);
 });
+
+commander.command('md5 <content>').action(async (content) => {
+  console.log(crypto.createHash('md5').update(content).digest('hex'))
+});
+
 // commander
 //   .command('setup [env]')
 //   .description('run setup commands for all envs')
