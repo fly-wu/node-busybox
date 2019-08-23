@@ -2,10 +2,10 @@ const FEUtils = require('./fe.js');
 const NodeUtils = require('./node.js');
 
 class Utils {
-  constructor(busybox) {
-    this.fe = new FEUtils(busybox);
-    this.node = new NodeUtils(busybox);
+  constructor() {
+    this.fe = new FEUtils();
+    this.node = new NodeUtils();
   }
 }
 
-module.exports = Utils;
+module.exports = new Utils();

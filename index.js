@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const Utils = require('./utils');
+const utils = require('./utils');
 
 class BusyBox {
   constructor() {
-    this.utils = new Utils(this);
+    this.utils = utils;
     this.addModulesInDirNodeModules();
   }
 
@@ -15,7 +15,8 @@ class BusyBox {
       .filter(it => {
         const fullPath = path.resolve(NODE_MODULES_PATH, it);
         // only scan directory
-        return !it.startsWith('.') && fs.statSync(fullPath).isDirectory()
+        // return !it.startsWith('.') && fs.statSync(fullPath).isDirectory();
+        return ['debug', 'formidable', 'koa', 'koa-static-cache'].indexOf(it) > -1;
       })
       .forEach(it => {
         const fullPath = path.resolve(NODE_MODULES_PATH, it);
