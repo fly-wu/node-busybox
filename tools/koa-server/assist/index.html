@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="initial-scale=1, width=device-width, maximum-scale=1, user-scalable=no" />
+  <title>HTML Model</title>
+  <style type="text/css">
+  html, body {
+    margin: 0px;
+    padding: 0px;
+  }
+  .container {
+    padding: 10px;
+  }
+  .section {
+    margin-bottom: 20px;
+  }
+  button {
+    font-size: 14px;
+    line-height: 18px;
+    padding: 3px 6px;
+    background: white;
+    border: 1px solid gray;
+  }
+  button:hover {
+    background: #ccc;
+  }
+
+  .section.upload .button {
+    font-size: 14px;
+    line-height: 18px;
+    padding: 3px 6px;
+    background: white;
+    border: 1px solid gray;
+    display: inline-block;
+  }
+
+  .section.form {
+    width: 600px;
+    margin: 0px auto;
+    font-size: 12px;
+    color: black;
+  }
+  .section.form .title {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .section.form .the-form .form-item {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  .section.form .the-form .form-item .label {
+    width: 240px;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: right;
+    font-weight: bold;
+    color: black;
+    box-sizing: border-box;
+    padding-right: 10px;
+  }
+  .section.form .the-form .form-item .content {
+    flex: 1;
+    box-sizing: border-box;
+  }
+  .section.form .the-form .form-item.footer {
+    display: flex;
+  }
+  .section.form .the-form .form-item.footer .item {
+    flex: 1;
+    text-align: center;
+  }
+  .section.form .the-form input[type="text"],
+  .section.form .the-form textarea {
+    font-size: 14px;
+    line-height: 16px;
+    background-color: rgba(255, 255, 255, .5);
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px;
+  }
+  </style>
+  <script type="text/javascript" src="./xhr-action.js"></script>
+  <!-- <script type="text/javascript" src="/assets/libs/axios/axios.20190729.min.js"></script> -->
+  <script>
+  function handleFileChange(evt) {
+    // can not reach
+    console.log(evt);
+    console.log(evt.target.files);
+  }
+    function showUploadFile() {
+      const container = document.querySelector('.container');
+      const toPostFiles = container.querySelector('.for-post-files .to-post-files');
+      const fileSelected = container.querySelector('.for-post-files input[name="fileList"]');
+      toPostFiles.addEventListener('click', evt => {
+        console.log(fileSelected.name);
+        console.log(fileSelected.files);
+        // console.log(fileSelected.files.length);
+        if (fileSelected.files.length > 0) {
+          new PostWays().postFile(fileSelected.files[0]);
+          
+          // var formData = new FormData();
+          // formData.append(fileSelected.name, fileSelected.files);
+          // new PostWays().postFormData(formData);
+        }
+      })
+    }
+  
+  // BlobBuilder is instead by Blob
+  function getBlob() {
+    const dataList = [];
+    dataList.push('This blob contains this text and 10 big-endian 32-bit signed ints.');
+    dataList.push('\O');
+    var ab = new ArrayBuffer(4 * 100);
+    var dv = new DataView(ab);
+    for (let i = 0; i < 100; i++) {
+      dv.setInt32(i * 4, i);
+    }
+    dataList.push(ab);
+    return new Blob(dataList);
+  }
+  
+  window.addEventListener('load', function() {
+    const xhrAction = new XHRAction();
+    // const axiosHelper = new axios.Helper({
+    //   headers: {
+    //     common: {
+    //       token: 'fdaf'
+    //     }
+    //   }
+    // });
+    const container = document.querySelector('.container');
+    container.addEventListener('click', async evt => {
+      var target = evt.target;
+      while (target && target !== container && target.tagName != 'BUTTON') {
+        target = target.parentNode;
+      }
+      const action = target.dataset.action;
+      const url = target.dataset.url;
+      console.log({action, url});
+      var resData = null;
+      switch (action) {
+        case 'request/abort':
+          xhrAction.requestMethods(url, 'abort');
+          break;
+        case 'readystatechange':
+          xhrAction.readystatechange(url);
+          break;
+        case '/api/test/get/common':
+          xhrAction.getCommon(action);
+          break;
+        case 'get-slow':
+          xhrAction.getSlow();
+          break;
+        case 'get-long-wait':
+          xhrAction.getLongWait();
+          break;
+        case 'get-xml':
+          xhrAction.getBinary('xml');
+          break;
+        case 'get-picture':
+          xhrAction.getBinary('image');
+          break;
+        case 'download-by-blob':
+          xhrAction.downloadByBlob(url, 'xml');
+          break;
+        case 'download-by-tag-a':
+          xhrAction.downloadByTagA(url);
+          break;
+        case 'post-json':
+          xhrAction.postNormal('application/json');
+          break;
+        case 'post-x-www-form-urlencoded':
+          xhrAction.postNormal('application/x-www-form-urlencoded');
+          break;
+        case 'post-form-data':
+          xhrAction.postNormal('multipart/form-data');
+          break;
+        case 'post-by-form':
+          var form = document.querySelector(target.dataset.for);
+          // form.style.display = 'block';
+          if (!form.style.display) {
+            form.style.display = 'block';
+          } else {
+            switch (form.style.display) {
+              case 'block':
+                form.style.display = 'none';
+                break;
+              case 'none':
+                form.style.display = 'block';
+                break;
+            }
+          }
+          break;
+        case 'post-blob':
+          xhrAction.post(getBlob());
+          break;
+        case 'server-error':
+          // resData = await axiosHelper.requestData({
+          //   method: 'get',
+          //   path: url
+          // });
+          // console.log(resData);
+          break;
+      }
+      // console.log(target);
+    });
+
+    document.querySelector('.section.form .the-form').onsubmit = (evt) => {
+      const target = evt.target;
+      // new FormData(target)
+      xhrAction.postNormal('multipart/form-data', new FormData(target));
+      evt.preventDefault();
+    }
+    const sectionFile = container.querySelector('.section.upload input.upload-more-files');
+    sectionFile.addEventListener('change', evt => {
+      // 不论是否有multiple标签，evt.target.files都是类数组
+      console.log(evt);
+      console.log(evt.target.files);
+      // console.log(typeof evt.target.files); // object
+      // console.log(evt.target.files instanceof FileList); // true
+      xhrAction.postNormal('multipart/form-data', {
+        files: evt.target.files
+      });
+    });
+  });
+  window.addEventListener('err', err => {
+    console.log(err);
+  })
+  </script>
+  <style>
+  .for-post-files {
+    padding: 10px;
+  }
+  .for-post-files input[name="fileList"] {
+    font-size: 16px;
+    padding: 3px 6px;
+    width: 360px;
+  }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="section request">
+      <button data-action="request/abort" data-url="/api/test/get/common?type=js&feature=slow">REQUEST/ABORT</button>
+      <!-- <button data-action="readystatechange" data-url="/api/test/get/common?type=xml&feature=slow">REQUEST/XML</button> -->
+      <!-- <button data-action="readystatechange" data-url="/api/test/get/common?type=png&feature=slow">REQUEST/BIN</button> -->
+    </div>
+    <div class="section response">
+      <button data-action="readystatechange" data-url="/api/test/get/common?type=js&feature=slow">SHOW-RESPOSE/JS</button>
+      <button data-action="readystatechange" data-url="/api/test/get/common?type=xml&feature=slow">SHOW-RESPONSE/XML</button>
+      <button data-action="readystatechange" data-url="/api/test/get/common?type=png&feature=slow">SHOW-RESPONSE/BIN</button>
+    </div>
+    <div class="section get">
+      <button data-action="/api/test/get/common">NORMAL</button>
+      <button data-action="get-slow">SLOW</button>
+      <button data-action="get-long-wait">LONG-WAIT</button>
+      <button data-action="get-xml">GET-XML</button>
+      <button data-action="get-picture">GET-PICTURE</button>
+    </div>
+    <div class="section download">
+      <button data-action="download-by-blob" data-url="/api/test/get/common?type=png&feature=slow&fileName=gnu-icon-small.png">DOWNLOAD-BY-BLOB</button>
+      <button data-action="download-by-tag-a" data-url="/api/test/get/common?type=png&feature=slow&fileName=gnu-icon-small.png">DOWNLOAD-BY-TAG-A</button>
+    </div>
+    <div class="section post">
+      <button data-action="post-json">POST-JSON</button>
+      <button data-action="post-x-www-form-urlencoded">POST-X-WWW-FORM-URLENCODED</button>
+      <button data-action="post-form-data">POST-FORM-DATA</button>
+      <button data-action="post-by-form" data-for=".section.form"><span>POST-FORM</span></button>
+    </div>
+    <div class="section form" style="display: none">
+      <div class="title">Research From</div>
+      <!-- default enctype is application/x-www-form-urlencoded -->
+      <!-- enctype="multipart/form-data"  -->
+      <!-- method="post" action="/api/post-data" -->
+      <form class="the-form" name="the-form" method="post" action="/api/test/post/normal">
+        <div class="form-item">
+          <div class="label">name</div>
+          <div class="content">
+            <input type="text" name="name">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label">email address</div>
+          <div class="content">
+            <input type="text" name="email" value="default-email">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label">apartment farming skills</div>
+          <div class="content">
+            <label>
+              <input name="skill" type="radio" value="novice" checked>Novice
+            </label>
+            <label>
+              <input name="skill" type="radio" value="intermediate">Intermediate
+            </label>
+            <label>
+              <input name="skill" type="radio" value="advanced">Advanced
+            </label>
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label">Select your favorite</div>
+          <div class="content">
+            <label>
+              <input name="likeMovie" type="checkbox" value="movie">Movie
+            </label>
+            <label>
+              <input name="likeMusic" type="checkbox" value="music">Music
+            </label>
+            <label>
+              <input name="likeReading" type="checkbox" value="reading">Reading
+            </label>
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label">Where did you hear about us? </div>
+          <div class="content">
+            <!-- multiple for multiple select -->
+            <select name="refer">
+              <option value="no">No</option>
+              <option value="friend">Friend</option>
+              <option value="herban-jungle" selected>Herban Jungle</option>
+              <option value="compost-today">Compost Today</option>
+              <option value="vanity-fair">Vanity Fair</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label">Upload file</div>
+          <div class="content">
+            <!-- file can be filtered by accept=".png, .jpg, .jpeg" -->
+            <input name="uploadFiles" multiple type="file"></input>
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label">Any additional comments? </div>
+          <div class="content">
+            <textarea name="comments" cols="35" rows="4"></textarea>
+          </div>
+        </div>
+        <div class="form-item footer">
+          <div class="item">
+            <input class="el-button" type="submit" value="Subscribe">
+          </div>
+          <div class="item">
+            <input class="el-button" type="reset" value="Reset">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="section upload">
+      <label style="position: relative; display: inline-block;">
+        <span class="button">上传多个文件</span>
+        <input class="button upload-more-files" type="file" name="fileList" title="上传文件" style="width: 0px; height: 0px; position: absolute; left: -9999px" onchange="handleFileChange" multiple>
+      </label>
+      <button data-action="post-blob">POST-BLOB</button>
+    </div>
+    <div class="section server">
+      <button data-action="server-error" data-url="/api/test/error">SERVER-ERROR</button>
+    </div>
+  </div>
+</body>
+
+</html>

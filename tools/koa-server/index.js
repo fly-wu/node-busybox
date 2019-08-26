@@ -4,6 +4,7 @@ const path = require('path');
 const util = require('util');
 const Koa = require('koa');
 const router = require('koa-router')();
+const formidable = require('formidable');
 const staticCache = require('koa-static-cache');
 const utils = require('../../utils');
 
@@ -55,6 +56,8 @@ module.exports = class KoaServer {
       console.log(err);
     });
     this.setStaticMiddleware(app);
+    this.setAssistMiddleware(app);
+    this.handlePost(app);
     app.listen(port);
     console.log(`started: ${origin}`);
     return app;
@@ -105,8 +108,85 @@ module.exports = class KoaServer {
   }
 
   setAssistMiddleware(app) {
-
+    if (!this.provideService.assist) {
+      return;
+    }
+    app.use(staticCache(path.resolve(__dirname, 'assist'), {
+      prefix: '/assist',
+      // maxAge: 365 * 24 * 60 * 60,
+      // buffer: true,
+      // dynamic: true,
+      dirContent(stat) {
+        return utils.node.getDirContentInFormOfHtml(stat.path)
+      }
+    }));
+    app.use(require('./assist/router').routes());
   }
 
+  // handle post, save file upload, return fileds and files
+  async parseByFormidable(ctx, next) {
+    const {req, res, urlObj} = ctx;
+    const pathname = urlObj.pathname;
+    if (!pathname.startsWith('/api/post')) {
+      return await next();
+    }
 
+    const uploadDir = this.uploadDir;
+
+    var form = new formidable.IncomingForm({
+      uploadDir,
+      keepExtensions: true,
+      multiples: true,
+      hash: 'md5'
+    });
+
+    const multipart = await new Promise((resolve, reject) => {
+      // form.on('progress', (bytesReceived, bytesExpected) => {
+      //   console.log(`${bytesReceived} / ${bytesExpected}`);
+      // });
+      form.parse(ctx.req, (err, fields, files) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({
+            fields,
+            files
+          });
+        }
+      });
+    });
+    // console.log(multipart);
+
+    var fileList = [];
+    Object.keys(multipart.files).forEach(key => {
+      fileList = fileList.concat(multipart.files[key]);
+    });
+
+    if (fileList.length > 0) {
+      const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
+      // mkdir uploads if necessary
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir);
+      }
+      fileList.forEach(file => {
+        var ext = path.extname(file.name);
+        ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
+        fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
+      });
+    }
+    // console.log(fileList);
+
+    const resBody = {};
+    resBody.fields = multipart.fields;
+    resBody.files = multipart.files;
+    ctx.type = 'json';
+    ctx.body = JSON.stringify(resBody);
+  }
+
+  handlePost(app) {
+    app.use(async(ctx, next) => {
+      if (ctx.method !== 'POST' || ctx.path.startsWith('/api')) return await next();
+      this.parseByFormidable(ctx, next);
+    });
+  }
 }
