@@ -432,6 +432,9 @@
     }
 
     parseQueryString(qs, sep, eq, options) {
+      if (qs.indexOf('?') > -1) {
+        qs = qs.split('?').pop();
+      }
       sep = sep || '&';
       eq = eq || '=';
       var obj = {};

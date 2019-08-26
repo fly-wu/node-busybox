@@ -57,6 +57,7 @@ module.exports = class KoaServer {
     });
     this.setStaticMiddleware(app);
     this.setAssistMiddleware(app);
+    this.parseByFormidable(app);
     this.handlePost(app);
     app.listen(port);
     console.log(`started: ${origin}`);
@@ -123,70 +124,74 @@ module.exports = class KoaServer {
     app.use(require('./assist/router').routes());
   }
 
-  // handle post, save file upload, return fileds and files
-  async parseByFormidable(ctx, next) {
-    const {req, res, urlObj} = ctx;
-    const pathname = urlObj.pathname;
-    if (!pathname.startsWith('/api/post')) {
-      return await next();
-    }
+  // parse body for all post, results is saved to ctx.request.body
+  // ?save=true, save file or not
+  parseByFormidable(app) {
+    app.use(async(ctx, next) => {
+      if (ctx.method !== 'POST' || !ctx.path.startsWith('/api')) return await next();
 
-    const uploadDir = this.uploadDir;
+      const uploadDir = this.uploadDir;
 
-    var form = new formidable.IncomingForm({
-      uploadDir,
-      keepExtensions: true,
-      multiples: true,
-      hash: 'md5'
-    });
+      var form = new formidable.IncomingForm({
+        uploadDir,
+        keepExtensions: true,
+        multiples: true,
+        hash: 'md5'
+      });
 
-    const multipart = await new Promise((resolve, reject) => {
-      // form.on('progress', (bytesReceived, bytesExpected) => {
-      //   console.log(`${bytesReceived} / ${bytesExpected}`);
-      // });
-      form.parse(ctx.req, (err, fields, files) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({
-            fields,
-            files
-          });
+      const multipart = await new Promise((resolve, reject) => {
+        // form.on('progress', (bytesReceived, bytesExpected) => {
+        //   console.log(`${bytesReceived} / ${bytesExpected}`);
+        // });
+        form.parse(ctx.req, (err, fields, files) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({
+              fields,
+              files
+            });
+          }
+        });
+      });
+      // console.log(multipart);
+
+      var fileList = [];
+      Object.keys(multipart.files).forEach(key => {
+        fileList = fileList.concat(multipart.files[key]);
+      });
+
+      if (fileList.length > 0) {
+        const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
+        // mkdir uploads if necessary
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir);
         }
-      });
-    });
-    // console.log(multipart);
-
-    var fileList = [];
-    Object.keys(multipart.files).forEach(key => {
-      fileList = fileList.concat(multipart.files[key]);
-    });
-
-    if (fileList.length > 0) {
-      const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
-      // mkdir uploads if necessary
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir);
+        fileList.forEach(file => {
+          var ext = path.extname(file.name);
+          ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
+          fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
+        });
       }
-      fileList.forEach(file => {
-        var ext = path.extname(file.name);
-        ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
-        fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
-      });
-    }
-    // console.log(fileList);
+      // console.log(fileList);
 
-    const resBody = {};
-    resBody.fields = multipart.fields;
-    resBody.files = multipart.files;
-    ctx.type = 'json';
-    ctx.body = JSON.stringify(resBody);
+      const resBody = {};
+      resBody.fields = multipart.fields;
+      resBody.files = multipart.files;
+      ctx.request.body = resBody;
+      return await next();
+    });
   }
 
+  // default action for post, if request is not handle in previous middleware
   handlePost(app) {
     app.use(async(ctx, next) => {
-      if (ctx.method !== 'POST' || ctx.path.startsWith('/api')) return await next();
-      this.parseByFormidable(ctx, next);
+      if (ctx.request.body) {
+        ctx.type = 'json';
+        ctx.body = JSON.stringify(resBody);
+      } else {
+        await next();
+      }
     });
   }
 }
