@@ -84,7 +84,7 @@
     padding: 2px;
   }
   </style>
-  <script type="text/javascript" src="./xhr-action.js"></script>
+  <script type="text/javascript" src="./xhr.js"></script>
   <!-- <script type="text/javascript" src="/assets/libs/axios/axios.20190729.min.js"></script> -->
   <script>
   function handleFileChange(evt) {
@@ -141,7 +141,7 @@
       }
       const action = target.dataset.action;
       const url = target.dataset.url;
-      console.log({action, url});
+      // console.log({action, url});
       var resData = null;
       switch (action) {
         case 'request/abort':
@@ -171,14 +171,10 @@
         case 'download-by-tag-a':
           xhrAction.downloadByTagA(url);
           break;
-        case 'post-json':
-          xhrAction.postNormal('application/json');
-          break;
-        case 'post-x-www-form-urlencoded':
-          xhrAction.postNormal('application/x-www-form-urlencoded');
-          break;
-        case 'post-form-data':
-          xhrAction.postNormal('multipart/form-data');
+        case '/api/test/echo?content-type=application/json':
+        case '/api/test/echo?content-type=application/x-www-form-urlencoded':
+        case '/api/test/echo?content-type=multipart/form-data':
+          xhrAction.echoPost(action);
           break;
         case 'post-by-form':
           var form = document.querySelector(target.dataset.for);
@@ -213,9 +209,10 @@
     document.querySelector('.section.form .the-form').onsubmit = (evt) => {
       const target = evt.target;
       // new FormData(target)
-      xhrAction.postNormal('multipart/form-data', new FormData(target));
+      xhrAction.echoPost('/api/test/echo?content-type=multipart/form-data', new FormData(target));
       evt.preventDefault();
     }
+    
     const sectionFile = container.querySelector('.section.upload input.upload-more-files');
     sectionFile.addEventListener('change', evt => {
       // 不论是否有multiple标签，evt.target.files都是类数组
@@ -223,7 +220,7 @@
       console.log(evt.target.files);
       // console.log(typeof evt.target.files); // object
       // console.log(evt.target.files instanceof FileList); // true
-      xhrAction.postNormal('multipart/form-data', {
+      xhrAction.echoPost('multipart/form-data', {
         files: evt.target.files
       });
     });
@@ -268,9 +265,9 @@
       <button data-action="download-by-tag-a" data-url="/api/test/get/common?type=png&feature=slow&fileName=gnu-icon-small.png">DOWNLOAD-BY-TAG-A</button>
     </div>
     <div class="section post">
-      <button data-action="post-json">POST-JSON</button>
-      <button data-action="post-x-www-form-urlencoded">POST-X-WWW-FORM-URLENCODED</button>
-      <button data-action="post-form-data">POST-FORM-DATA</button>
+      <button data-action="/api/test/echo?content-type=application/json">POST-JSON</button>
+      <button data-action="/api/test/echo?content-type=application/x-www-form-urlencoded">POST-X-WWW-FORM-URLENCODED</button>
+      <button data-action="/api/test/echo?content-type=multipart/form-data">POST-FORM-DATA</button>
       <button data-action="post-by-form" data-for=".section.form"><span>POST-FORM</span></button>
     </div>
     <div class="section form" style="display: none">

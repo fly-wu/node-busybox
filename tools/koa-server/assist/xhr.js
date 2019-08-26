@@ -346,14 +346,16 @@ class XHRAction {
    * 通过post发送数据
    */
   // setRequestHeader在open和send之间
-  postNormal(format, data) {
+  echoPost(url, data = {}) {
     const defaultData = {
       name: 'me',
       password: 'abcdef中文测试'
     }
-    const allFormats = ['application/json', 'application/x-www-form-urlencoded', 'multipart/form-data'];
-    if (!allFormats.includes(format)) {
-      console.log(`format ${format} is not recognized!`);
+    const contentType = this.parseQueryString(url)['content-type'];
+    const contentTypeList = ['application/json', 'application/x-www-form-urlencoded', 'multipart/form-data'];
+    if (!contentTypeList.includes(contentType)) {
+      console.log(`contentType ${contentType} is not recognized!`);
+      return;
     }
     const request = new XMLHttpRequest();
     request.onreadystatechange = () => {
@@ -375,11 +377,11 @@ class XHRAction {
     }
     request.open('POST', '/api/test/echo');
     var payload = null;
-    switch (format) {
+    switch (contentType) {
       case 'application/json':
         data = Object.assign(defaultData, data);
         payload = JSON.stringify(data);
-        request.setRequestHeader('Content-Type', format);
+        request.setRequestHeader('Content-Type', contentType);
         break;
       case 'application/x-www-form-urlencoded':
         data = Object.assign(defaultData, data);
@@ -388,11 +390,12 @@ class XHRAction {
           params.append(key, data[key]);
         }
         payload = params.toString();
-        request.setRequestHeader('Content-Type', format);
+        request.setRequestHeader('Content-Type', contentType);
         break;
       case 'multipart/form-data':
         var formData = data;
-        if (!(data instanceof FormData)) {
+        if ((data instanceof FormData)) {
+        } else {
           formData = new FormData();
           data = Object.assign(defaultData, data);
           for (let key in data) {
@@ -428,6 +431,9 @@ class XHRAction {
   // }
 
   parseQueryString(qs, sep, eq, options) {
+    if (qs.indexOf('?') > -1) {
+      qs = qs.split('?').pop();
+    }
     sep = sep || '&';
     eq = eq || '=';
     var obj = {};
