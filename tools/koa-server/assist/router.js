@@ -69,8 +69,8 @@ router.get('/api/test/get/common', async(ctx, next) => {
 
 router.post('/api/test/post/normal', async(ctx, next) => {
   var data = await utils.node.getStreamData(ctx.req);
-  console.log(data);
-  console.log(data.length);
+  // console.log(data);
+  // console.log(data.length);
   if (data.length > 1000) {
     data = data.slice(0, 1000);
   }
@@ -120,12 +120,12 @@ router.all('/api/test/echo', async(ctx, next) => {
   const buf = await utils.node.getStreamData(ctx.req);
   // console.log(ctx.req.headers)
   // console.log(buf.toString());
-  ctx.type = 'buffer';
+  ctx.type = 'json';
   ctx.body = {
     general: `${ctx.method} ${ctx.path} ${ctx.protocol}`,
     url: ctx.url,
     headers: ctx.headers,
-    data: buf.toString()
+    body: buf.toString()
   };
 });
   
