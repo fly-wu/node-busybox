@@ -161,7 +161,7 @@ module.exports = class KoaServer {
         fileList = fileList.concat(multipart.files[key]);
       });
 
-      if (fileList.length > 0) {
+      if (fileList.length > 0 && ctx.query['save']) {
         const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
         // mkdir uploads if necessary
         if (!fs.existsSync(uploadDir)) {
@@ -169,8 +169,9 @@ module.exports = class KoaServer {
         }
         fileList.forEach(file => {
           var ext = path.extname(file.name);
-          ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
-          fs.writeFileSync(path.resolve(uploadDir, `${file.hash}${ext}`), file.data);
+          const basename = path.basename(file.name, ext);
+          // ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
+          fs.writeFileSync(path.resolve(uploadDir, `${file.hash}.${basename}.${ext}`), file.data);
         });
       }
       // console.log(fileList);
@@ -188,7 +189,7 @@ module.exports = class KoaServer {
     app.use(async(ctx, next) => {
       if (ctx.request.body) {
         ctx.type = 'json';
-        ctx.body = JSON.stringify(resBody);
+        ctx.body = ctx.request.body;
       } else {
         await next();
       }
