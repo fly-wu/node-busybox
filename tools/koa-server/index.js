@@ -16,6 +16,22 @@ const utils = require('../../utils');
 // });
 // console.log(debug.getState().getConfig());
 
+process.on('error', err => {
+  console.log(err);
+});
+process.on('uncaughtException', (e) => {
+  console.log(`uncaughtException: ${e}`);
+  console.log(e);
+});
+process.on('beforeExit', (e) => {　　
+  console.log(`beforeExit: ${e}`);
+  process.exit();
+});
+process.on('unhandledRejection', err => {
+  console.log('unhandledRejection');
+  console.log(err);
+});
+
 module.exports = class KoaServer {
   constructor(options = {
     staticDir: null,
@@ -44,8 +60,6 @@ module.exports = class KoaServer {
     this.provideService = provideService;
     
     this._httpServer = null;
-    // 创建一个Koa对象表示web app本身:
-    this.app = new Koa();
   }
 
   async start() {
@@ -55,9 +69,10 @@ module.exports = class KoaServer {
     app.on('error', err => {
       console.log(err);
     });
+    app.UPLOAD_DIR = this.UPLOAD_DIR;
     this.setStaticMiddleware(app);
-    this.setAssistMiddleware(app);
     this.parseByFormidable(app);
+    this.setAssistMiddleware(app);
     this.handlePost(app);
     app.listen(port);
     console.log(`started: ${origin}`);
@@ -116,7 +131,8 @@ module.exports = class KoaServer {
       prefix: '/assist',
       // maxAge: 365 * 24 * 60 * 60,
       // buffer: true,
-      // dynamic: true,
+      // gzip: true,
+      dynamic: true,
       dirContent(stat) {
         return utils.node.getDirContentInFormOfHtml(stat.path)
       }
@@ -131,56 +147,76 @@ module.exports = class KoaServer {
       if (ctx.method !== 'POST' || !ctx.path.startsWith('/api')) return await next();
 
       const uploadDir = this.uploadDir;
-
       var form = new formidable.IncomingForm({
         uploadDir,
         keepExtensions: true,
         multiples: true,
         hash: 'md5'
       });
-
-      const multipart = await new Promise((resolve, reject) => {
-        // form.on('progress', (bytesReceived, bytesExpected) => {
-        //   console.log(`${bytesReceived} / ${bytesExpected}`);
-        // });
-        form.parse(ctx.req, (err, fields, files) => {
-          if (err) {
+      const [multipart, originData] = await Promise.all([
+        new Promise((resolve, reject) => {
+          // form.on('progress', (bytesReceived, bytesExpected) => {
+          //   console.log(`${bytesReceived} / ${bytesExpected}`);
+          // });
+          form.parse(ctx.req, (err, fields, files) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve({
+                fields,
+                files
+              });
+            }
+          });
+        }),
+        new Promise((resolve, reject) => {
+          var bufSize = 0;
+          var bufferList = [];
+          ctx.req.on('data', function(chunk){
+            bufSize += chunk.length;
+            if (bufSize > 512 * 1024 * 1024) {
+              return;
+            }
+            bufferList.push(chunk);
+          });
+          ctx.req.on('end', function() {
+            resolve(Buffer.concat(bufferList));
+          });
+          ctx.req.on('error', function(err) {
             reject(err);
-          } else {
-            resolve({
-              fields,
-              files
-            });
-          }
-        });
-      });
+          })
+        })
+      ])
       // console.log(multipart);
 
-      var fileList = [];
-      Object.keys(multipart.files).forEach(key => {
-        fileList = fileList.concat(multipart.files[key]);
-      });
-
-      if (fileList.length > 0 && ctx.query['save']) {
-        const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
-        // mkdir uploads if necessary
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir);
-        }
-        fileList.forEach(file => {
-          var ext = path.extname(file.name);
-          const basename = path.basename(file.name, ext);
-          // ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
-          fs.writeFileSync(path.resolve(uploadDir, `${file.hash}.${basename}.${ext}`), file.data);
+      if (ctx.query['save']) {
+        var fileList = [];
+        Object.keys(multipart.files).forEach(key => {
+          fileList = fileList.concat(multipart.files[key]);
         });
+
+        if (fileList.length > 0) {
+          const uploadDir = path.resolve(this.UPLOAD_DIR, 'uploads');
+          // mkdir uploads if necessary
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+          }
+          fileList.forEach(file => {
+            var ext = path.extname(file.name);
+            const basename = path.basename(file.name, ext);
+            // ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
+            fs.writeFileSync(path.resolve(uploadDir, `${file.hash}.${basename}.${ext}`), file.data);
+          });
+        }
+        // console.log(fileList);
       }
-      // console.log(fileList);
 
       const resBody = {};
       resBody.fields = multipart.fields;
       resBody.files = multipart.files;
       ctx.request.body = resBody;
-      return await next();
+      ctx.request.data = originData;
+      await next();
     });
   }
 

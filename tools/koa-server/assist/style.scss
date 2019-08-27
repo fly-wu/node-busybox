@@ -1,0 +1,92 @@
+
+html, body {
+  margin: 0px;
+  padding: 0px;
+}
+.container {
+  padding: 10px;
+
+  button {
+    font-size: 14px;
+    line-height: 18px;
+    padding: 3px 6px;
+    background: white;
+    border: 1px solid gray;
+  }
+  button:hover {
+    background: #ccc;
+  }
+
+  .form {
+    .form-item {
+      margin-bottom: 10px;
+      &-label {
+        width: 180px;
+        float: left;
+        text-align: right;
+        padding: 0px 12px 0px 0px;
+      }
+      &-content {
+        margin-left: 180px;
+      }
+      &.upload {
+       .button {
+          font-size: 14px;
+          line-height: 18px;
+          padding: 3px 6px;
+          background: white;
+          border: 1px solid gray;
+          display: inline-block;
+        }
+      }
+    }
+  }
+}
+
+
+.section.form {
+  width: 600px;
+  margin: 0px auto;
+  font-size: 12px;
+  color: black;
+}
+.section.form .title {
+  font-weight: bold;
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.section.form .the-form .form-item {
+  display: flex;
+  margin-bottom: 10px;
+}
+.section.form .the-form .form-item .label {
+  width: 240px;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: right;
+  font-weight: bold;
+  color: black;
+  box-sizing: border-box;
+  padding-right: 10px;
+}
+.section.form .the-form .form-item .content {
+  flex: 1;
+  box-sizing: border-box;
+}
+.section.form .the-form .form-item.footer {
+  display: flex;
+}
+.section.form .the-form .form-item.footer .item {
+  flex: 1;
+  text-align: center;
+}
+.section.form .the-form input[type="text"],
+.section.form .the-form textarea {
+  font-size: 14px;
+  line-height: 16px;
+  background-color: rgba(255, 255, 255, .5);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2px;
+}

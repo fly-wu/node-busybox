@@ -174,7 +174,6 @@ class XHRAction {
 　　* xhr.statusText：服务器返回的状态文本。
   */
   getCommon(url) {
-    console.log(url);
     const request = new XMLHttpRequest();
     request.open('GET', url);
     request.onreadystatechange = () => {
@@ -311,7 +310,12 @@ class XHRAction {
   }
 
 
-  async downloadByBlob(url) {
+  /**
+   * 两种下载方式对比：
+   * downloadByBlob，下载数据完成后，将数据转换成blob，通过a标签下载
+   * downloadByTagA，直接打开下载弹框，使用浏览器自带的下载功能进行下载
+   */
+  downloadByBlob(url) {
     const query = this.parseQueryString(url.split('?').pop());
     const request = new XMLHttpRequest();
     request.responseType = 'blob';
@@ -331,7 +335,6 @@ class XHRAction {
     }
     request.send(null);
   }
-
   downloadByTagA(url) {
     const query = this.parseQueryString(url.split('?').pop());
     const a = document.createElement('a');
@@ -346,12 +349,19 @@ class XHRAction {
    * 通过post发送数据
    */
   // setRequestHeader在open和send之间
-  echoPost(url, data = {}) {
+  postCommon(url, data = {}) {
     const defaultData = {
       name: 'me',
       password: 'abcdef中文测试'
     }
-    const contentType = this.parseQueryString(url)['content-type'];
+    var contentType = this.parseQueryString(url)['content-type'];
+    if (!contentType) {
+      if (utils.node.isObject(data)) {
+        contentType = 'application/json';
+      } else if (data instanceof FormData) {
+        contentType = 'multipart/form-data';
+      }
+    }
     const contentTypeList = ['application/json', 'application/x-www-form-urlencoded', 'multipart/form-data'];
     if (!contentTypeList.includes(contentType)) {
       console.log(`contentType ${contentType} is not recognized!`);
@@ -364,18 +374,27 @@ class XHRAction {
         var body = request.responseText;
         console.log(`Content-Type: ${type}`);
         if (type.indexOf('application/json') > -1) {
-          body = JSON.parse(body);
-          console.log(body.url);
-          console.log(body.general);
-          console.log(this.jsonFormat(body.headers));
-          console.log(body.body);
-          console.log();
+          try {
+            body = JSON.parse(body);
+            console.log(body);
+            // if (body.hasOwnProperty('url') && body.hasOwnProperty('general') 
+            //   && body.hasOwnProperty('headers') && body.hasOwnProperty('body')) {
+            //   console.log(body.url);
+            //   console.log(body.general);
+            //   console.log(body.headers ? this.jsonFormat(body.headers) : '');
+            //   console.log(body.body);
+            // } else {
+            //   console.log(body);
+            // }
+          } catch (err) {
+            console.log(body);
+          }
         } else {
           console.log(body);
         }
       }
     }
-    request.open('POST', '/api/test/echo');
+    request.open('POST', url);
     var payload = null;
     switch (contentType) {
       case 'application/json':
