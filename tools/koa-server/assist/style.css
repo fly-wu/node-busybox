@@ -19,14 +19,19 @@ html, body {
 .container .form .form-item {
   margin-bottom: 10px;
 }
+.container .form .form-item::before, .container .form .form-item::after {
+  display: table;
+  content: "";
+  clear: both;
+}
 .container .form .form-item-label {
-  width: 180px;
+  width: 240px;
   float: left;
   text-align: right;
   padding: 0px 12px 0px 0px;
 }
 .container .form .form-item-content {
-  margin-left: 180px;
+  margin-left: 240px;
 }
 .container .form .form-item.upload .button {
   font-size: 14px;

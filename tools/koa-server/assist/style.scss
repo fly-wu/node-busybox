@@ -20,14 +20,19 @@ html, body {
   .form {
     .form-item {
       margin-bottom: 10px;
+      &::before, &::after {
+        display: table;
+        content: "";
+        clear: both;
+      }
       &-label {
-        width: 180px;
+        width: 240px;
         float: left;
         text-align: right;
         padding: 0px 12px 0px 0px;
       }
       &-content {
-        margin-left: 180px;
+        margin-left: 240px;
       }
       &.upload {
        .button {

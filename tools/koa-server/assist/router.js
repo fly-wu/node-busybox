@@ -15,19 +15,17 @@ async function handleBody(ctx, next) {
   if (!body) {
     return next();
   }
-
-  if (utils.node.isObject(body)) {
+  if (utils.node.isPlainObject(body)) {
     body = JSON.stringify(body);
   }
-  if ('string' == typeof body) {
-    body = Buffer.from(body)
-  }
   if (Buffer.isBuffer(body)) {
+    body = body.toString();
+  }
+  if ('string' == typeof body) {
     body = utils.node.toStream(body);
-    // body = zlib.gzipSync(body)
   }
   if (body instanceof Stream) {
-    if (ctx.acceptsEncodings('gzip') === 'gzip' && !ctx.query['content-encoding']) {
+    if (ctx.acceptsEncodings('gzip') === 'gzip' && (ctx.get['content-encoding'] !== 'gzip')) {
       ctx.set('content-encoding', 'gzip');
       body = body.pipe(zlib.createGzip());
     }
@@ -44,7 +42,7 @@ async function handleBody(ctx, next) {
   }
   
   if (slow) {
-    const slowTransform = utils.node.slowTransform(1024, 500);
+    const slowTransform = utils.node.slowStream(1024, 500);
     body = body.pipe(slowTransform);
   }
   if (logWait) {
@@ -89,26 +87,8 @@ router.get('/api/test/get/common', async(ctx, next) => {
     return body;
   }
   
-  var body = getStreamByType(extension ? extension : 'js');
-  switch(feature) {
-    case 'slow':
-      const slowTransform = utils.node.slowStream();
-      body.pipe(slowTransform);
-      ctx.body = slowTransform;
-      break;
-    case 'long-wait':
-      // 等待30秒
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve();
-        }, 30000);
-      })
-      ctx.body = body;
-    default:
-      ctx.body = body;
-      break;
-  }
-  // handleBody(ctx, next);
+  ctx.body = getStreamByType(extension ? extension : 'js');
+  handleBody(ctx, next);
 });
 
 
@@ -138,7 +118,7 @@ router.post('/api/test/post/common', async(ctx, next) => {
   ctx.type = 'json';
   ctx.body = ctx.request.body;
   // console.log(ctx.body);
-  // handleBody(ctx, next);
+  handleBody(ctx, next);
 });
 
 router.all('/api/test/echo', async(ctx, next) => {
@@ -154,7 +134,7 @@ router.all('/api/test/echo', async(ctx, next) => {
     body: buf.toString()
   };
   // console.log(ctx.body);
-  // handleBody(ctx, next);
+  handleBody(ctx, next);
 });
 
 router.all('/api/test/error', async(ctx, next) => {

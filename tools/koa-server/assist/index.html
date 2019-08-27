@@ -52,7 +52,9 @@
     const xhrAction = new XHRAction();
 
     function handleAction(action, data) {
-            // const url = target.dataset.url;
+      if (!action) {
+        return;
+      }
       const actionToUrl = {
         'download-by-blob': '/api/test/get/common?type=png&feature=slow&fileName=gnu-icon-small.png',
         'download-by-tag-a': '/api/test/get/common?type=png&feature=slow&fileName=gnu-icon-small.png'
@@ -198,7 +200,7 @@
         </div>
       </div>
       <div class="form-item">
-        <div class="form-item-label">POST WAYS:</div>
+        <div class="form-item-label">SHOW POST REQUEST:</div>
         <div class="form-item-content">
           <button data-action="/api/test/echo?content-type=application/json">POST-JSON</button>
           <button data-action="/api/test/echo?content-type=application/x-www-form-urlencoded">POST-X-WWW-FORM-URLENCODED</button>
