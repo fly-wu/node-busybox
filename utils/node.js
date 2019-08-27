@@ -471,11 +471,14 @@ module.exports = class NodeUtils extends Common {
    * @param {data}, String or Object
    */
   toStream(data) {
+    if (Buffer.isBuffer(data)) {
+      data = data.toString();
+    }
     if (this.isObject(data)) {
       data = JSON.stringify(data);
     }
     if (!this.isString(data)) {
-      conosle.log(`warning: data is not string`);
+      conosle.log(`warning: data should be string or buffer`);
     }
     return new stream.Readable({
       read() {
@@ -551,5 +554,27 @@ module.exports = class NodeUtils extends Common {
       console.log(`axiosResponse is null`);
     }
     return axiosResponse;
+  }
+
+
+  error({code, content, msg}) {
+    const status = {
+      success: false,
+      code: code ? code : 0,
+      msg: msg ? msg : '',
+      content: content ? content : '',
+      t: new Date().getTime()
+    };
+    return JSON.stringify(status);
+  }
+  success({code, content, msg}) {
+    const status = {
+      success: true,
+      code: code ? code : 0,
+      msg: msg ? msg : '',
+      content: content ? content : '',
+      t: new Date().getTime()
+    };
+    return JSON.stringify(status);
   }
 }
