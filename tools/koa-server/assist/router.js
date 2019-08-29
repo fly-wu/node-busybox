@@ -30,6 +30,17 @@ async function handleBody(ctx, next) {
       body = body.pipe(zlib.createGzip());
     }
   }
+
+  const withCookie = ctx.query['cookie'];
+  if (withCookie) {
+    var count = ~~ctx.cookies.get('count') + 1;
+    ctx.cookies.set('count', count);
+    ctx.cookies.set('rich', 'with all config', {
+      maxage: 1000 * 6,
+      httpOnly: false
+    });
+  }
+
   // const feature = ctx.query.feature;
   const slow = ctx.query['slow'];
   var logWait = ctx.query['long-wait'];
@@ -143,21 +154,10 @@ router.all('/api/test/error', async(ctx, next) => {
       success: false,
       msg: '错误信息'
     })
-  })
-  // var data = await utils.node.getStreamData(ctx.req);
-  // // const writer = fs.createWriteStream(path.resolve(__dirname, 'received.bin'));
-  // fs.writeFile(path.resolve(__dirname, 'received.bin'), data);
-  // console.log(data);
-  // console.log(data.length);
-  // // if (data.length > 1000) {
-  //   // data = data.slice(0, 1000);
-  // // }
-  // console.log(data.toString());
-  // ctx.type = 'application/octet-stream';
-  // ctx.body = data;
+  });
 });
 
-  
+
 module.exports = router;
 
 // add router middleware:

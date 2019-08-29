@@ -36,6 +36,7 @@ module.exports = class KoaServer {
   constructor(options = {
     staticDir: null,
     uploadDir: null,
+    port: null
   }, provideService = {
     static: true,
     assets: false,
@@ -44,6 +45,7 @@ module.exports = class KoaServer {
     this.CURRENT_WORK_DIR = process.cwd();
     this.STATIC_DIR = options.staticDir ? (options.staticDir.startsWith('/') ? options.staticDir : path.resolve(this.CURRENT_WORK_DIR, options.staticDir)) : this.CURRENT_WORK_DIR;
     this.UPLOAD_DIR = options.uploadDir ? options.uploadDir : this.CURRENT_WORK_DIR;
+    this.PORT = options.port;
     // dir check
     [this.STATIC_DIR, this.UPLOAD_DIR].forEach(dir => {
       var stats = fs.statSync(this.STATIC_DIR);
@@ -63,20 +65,32 @@ module.exports = class KoaServer {
   }
 
   async start() {
-    const port = await utils.node.getAFreePort();
-    const origin = `http://127.0.0.1:${port}`;
-    const app = new Koa();
-    app.on('error', err => {
-      console.log(err);
+    try {
+      const port = this.PORT ? this.PORT : (await utils.node.getAFreePort());
+      const origin = `http://127.0.0.1:${port}`;
+      const app = new Koa();
+      app.on('error', err => {
+        console.log(err);
+      });
+      app.UPLOAD_DIR = this.UPLOAD_DIR;
+      this.setCommonMiddleware(app);
+      this.setStaticMiddleware(app);
+      this.parseByFormidable(app);
+      this.setAssistMiddleware(app);
+      this.handlePost(app);
+      app.listen(port);
+      console.log(`started: ${origin}`);
+      return app;
+    } catch (err) {
+      return err;
+    }
+  }
+
+  setCommonMiddleware(app) {
+    app.use(async(ctx, next) => {
+      console.log(`${ctx.url}`);
+      await next();
     });
-    app.UPLOAD_DIR = this.UPLOAD_DIR;
-    this.setStaticMiddleware(app);
-    this.parseByFormidable(app);
-    this.setAssistMiddleware(app);
-    this.handlePost(app);
-    app.listen(port);
-    console.log(`started: ${origin}`);
-    return app;
   }
 
   setStaticMiddleware(app) {
@@ -160,7 +174,7 @@ module.exports = class KoaServer {
           // });
           form.parse(ctx.req, (err, fields, files) => {
             if (err) {
-              reject(err);
+              resolve(err);
             } else {
               resolve({
                 fields,
@@ -183,11 +197,12 @@ module.exports = class KoaServer {
             resolve(Buffer.concat(bufferList));
           });
           ctx.req.on('error', function(err) {
-            reject(err);
+            resolve(err);
           })
         })
       ])
       // console.log(multipart);
+      // console.log(originData);
 
       if (ctx.query['save']) {
         var fileList = [];
@@ -211,10 +226,7 @@ module.exports = class KoaServer {
         // console.log(fileList);
       }
 
-      const resBody = {};
-      resBody.fields = multipart.fields;
-      resBody.files = multipart.files;
-      ctx.request.body = resBody;
+      ctx.request.body = multipart;
       ctx.request.data = originData;
       await next();
     });
@@ -226,6 +238,7 @@ module.exports = class KoaServer {
       if (ctx.request.body) {
         ctx.type = 'json';
         ctx.body = ctx.request.body;
+      } else if (ctx.request.data) {
       } else {
         await next();
       }
