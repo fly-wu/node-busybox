@@ -102,6 +102,9 @@
     isRegExp(obj) {
       return obj instanceof RegExp
     }
+    isError(obj) {
+      return obj instanceof Error
+    }
 
     isUndefined(val) {
       return typeof val === 'undefined';

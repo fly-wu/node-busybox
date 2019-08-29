@@ -543,12 +543,13 @@ module.exports = class NodeUtils extends Common {
       }
     }
     if (axiosResponse) {
-      console.log(' ------ ');
-      console.log('request headers:');
+      console.log(' ---request headers--- ');
       console.log(axiosResponse.request.getHeaders());
-      console.log('response:');
+      console.log(' ---response general--- ');
       console.log(`${axiosResponse.status} ${axiosResponse.statusText}`);
+      console.log(' ---response headers--- ');
       console.log(axiosResponse.headers);
+      console.log(' ---response body--- ');
       console.log(axiosResponse.data.length > 1000 ? axiosResponse.data.substring(0, 1000) : axiosResponse.data);
     } else {
       console.log(`axiosResponse is null`);
