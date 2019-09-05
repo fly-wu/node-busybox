@@ -91,6 +91,11 @@ module.exports = class KoaServer {
       console.log(`${ctx.url}`);
       await next();
     });
+    app.on('error', err => {
+      console.log('err catched started:');
+      console.log(err);
+      console.log('err catched end');
+    })
   }
 
   setStaticMiddleware(app) {
@@ -167,6 +172,7 @@ module.exports = class KoaServer {
         multiples: true,
         hash: 'md5'
       });
+      // console.log('start parse');
       const [multipart, originData] = await Promise.all([
         new Promise((resolve, reject) => {
           // form.on('progress', (bytesReceived, bytesExpected) => {
@@ -239,6 +245,8 @@ module.exports = class KoaServer {
         ctx.type = 'json';
         ctx.body = ctx.request.body;
       } else if (ctx.request.data) {
+        ctx.type = 'bin';
+        ctx.body = ctx.request.data;
       } else {
         await next();
       }
