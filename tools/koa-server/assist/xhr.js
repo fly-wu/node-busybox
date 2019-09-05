@@ -376,16 +376,15 @@ class XHRAction {
         if (type.indexOf('application/json') > -1) {
           try {
             body = JSON.parse(body);
-            console.log(body);
-            // if (body.hasOwnProperty('url') && body.hasOwnProperty('general') 
-            //   && body.hasOwnProperty('headers') && body.hasOwnProperty('body')) {
-            //   console.log(body.url);
-            //   console.log(body.general);
-            //   console.log(body.headers ? this.jsonFormat(body.headers) : '');
-            //   console.log(body.body);
-            // } else {
-            //   console.log(body);
-            // }
+            if (url.startsWith('/api/test/echo') && body.hasOwnProperty('url') && body.hasOwnProperty('general') 
+              && body.hasOwnProperty('headers') && body.hasOwnProperty('body')) {
+              console.log(body.url);
+              console.log(body.general);
+              console.log(body.headers ? this.jsonFormat(body.headers) : '');
+              console.log(body.body);
+            } else {
+              console.log(body);
+            }
           } catch (err) {
             console.log(body);
           }

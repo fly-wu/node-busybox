@@ -95,7 +95,8 @@
             xhrAction.downloadByTagA(actionToUrl[action]);
             break;
           case 'post-by-form':
-            var form = document.querySelector(target.dataset.for);
+            // var form = document.querySelector(target.dataset.for);
+            var form = document.querySelector('.form .form-item.form-sheet');
             // form.style.display = 'block';
             if (!form.style.display) {
               form.style.display = 'block';
@@ -205,7 +206,92 @@
           <button data-action="/api/test/echo?content-type=application/json">POST-JSON</button>
           <button data-action="/api/test/echo?content-type=application/x-www-form-urlencoded">POST-X-WWW-FORM-URLENCODED</button>
           <button data-action="/api/test/echo?content-type=multipart/form-data">POST-FORM-DATA</button>
-          <button data-action="post-by-form" data-for=".section.form"><span>POST-FORM</span></button>
+          <button data-action="post-by-form"><span>POST-FORM</span></button>
+        </div>
+      </div>
+      <div class="form-item form-sheet" style="display: none">
+        <div class="form-item-label"></div>
+        <div class="form-item-content">
+          <div class="title">Research From</div>
+          <!-- default enctype is application/x-www-form-urlencoded -->
+          <!-- enctype="multipart/form-data"  -->
+          <!-- method="post" action="/api/post-data" -->
+          <form class="the-form" name="the-form" method="post" action="/api/test/post/normal">
+            <div class="form-item">
+              <div class="label">name</div>
+              <div class="content">
+                <input type="text" name="name">
+              </div>
+            </div>
+            <div class="form-item">
+              <div class="label">email address</div>
+              <div class="content">
+                <input type="text" name="email" value="default-email">
+              </div>
+            </div>
+            <div class="form-item">
+              <div class="label">apartment farming skills</div>
+              <div class="content">
+                <label>
+                  <input name="skill" type="radio" value="novice" checked>Novice
+                </label>
+                <label>
+                  <input name="skill" type="radio" value="intermediate">Intermediate
+                </label>
+                <label>
+                  <input name="skill" type="radio" value="advanced">Advanced
+                </label>
+              </div>
+            </div>
+            <div class="form-item">
+              <div class="label">Select your favorite</div>
+              <div class="content">
+                <label>
+                  <input name="likeMovie" type="checkbox" value="movie">Movie
+                </label>
+                <label>
+                  <input name="likeMusic" type="checkbox" value="music">Music
+                </label>
+                <label>
+                  <input name="likeReading" type="checkbox" value="reading">Reading
+                </label>
+              </div>
+            </div>
+            <div class="form-item">
+              <div class="label">Where did you hear about us? </div>
+              <div class="content">
+                <!-- multiple for multiple select -->
+                <select name="refer">
+                  <option value="no">No</option>
+                  <option value="friend">Friend</option>
+                  <option value="herban-jungle" selected>Herban Jungle</option>
+                  <option value="compost-today">Compost Today</option>
+                  <option value="vanity-fair">Vanity Fair</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-item">
+              <div class="label">Upload file</div>
+              <div class="content">
+                <!-- file can be filtered by accept=".png, .jpg, .jpeg" -->
+                <input name="uploadFiles" multiple type="file"></input>
+              </div>
+            </div>
+            <div class="form-item">
+              <div class="label">Any additional comments? </div>
+              <div class="content">
+                <textarea name="comments" cols="35" rows="4"></textarea>
+              </div>
+            </div>
+            <div class="form-item footer">
+              <div class="item">
+                <input class="el-button" type="submit" value="Subscribe">
+              </div>
+              <div class="item">
+                <input class="el-button" type="reset" value="Reset">
+              </div>
+            </div>
+          </form>
         </div>
       </div>
       <div class="form-item upload">
@@ -226,88 +312,6 @@
           </div>
         </div>
       </div>
-    </div>
-    <div class="section form" style="display: none">
-      <div class="title">Research From</div>
-      <!-- default enctype is application/x-www-form-urlencoded -->
-      <!-- enctype="multipart/form-data"  -->
-      <!-- method="post" action="/api/post-data" -->
-      <form class="the-form" name="the-form" method="post" action="/api/test/post/normal">
-        <div class="form-item">
-          <div class="label">name</div>
-          <div class="content">
-            <input type="text" name="name">
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="label">email address</div>
-          <div class="content">
-            <input type="text" name="email" value="default-email">
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="label">apartment farming skills</div>
-          <div class="content">
-            <label>
-              <input name="skill" type="radio" value="novice" checked>Novice
-            </label>
-            <label>
-              <input name="skill" type="radio" value="intermediate">Intermediate
-            </label>
-            <label>
-              <input name="skill" type="radio" value="advanced">Advanced
-            </label>
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="label">Select your favorite</div>
-          <div class="content">
-            <label>
-              <input name="likeMovie" type="checkbox" value="movie">Movie
-            </label>
-            <label>
-              <input name="likeMusic" type="checkbox" value="music">Music
-            </label>
-            <label>
-              <input name="likeReading" type="checkbox" value="reading">Reading
-            </label>
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="label">Where did you hear about us? </div>
-          <div class="content">
-            <!-- multiple for multiple select -->
-            <select name="refer">
-              <option value="no">No</option>
-              <option value="friend">Friend</option>
-              <option value="herban-jungle" selected>Herban Jungle</option>
-              <option value="compost-today">Compost Today</option>
-              <option value="vanity-fair">Vanity Fair</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="label">Upload file</div>
-          <div class="content">
-            <!-- file can be filtered by accept=".png, .jpg, .jpeg" -->
-            <input name="uploadFiles" multiple type="file"></input>
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="label">Any additional comments? </div>
-          <div class="content">
-            <textarea name="comments" cols="35" rows="4"></textarea>
-          </div>
-        </div>
-        <div class="form-item footer">
-          <div class="item">
-            <input class="el-button" type="submit" value="Subscribe">
-          </div>
-          <div class="item">
-            <input class="el-button" type="reset" value="Reset">
-          </div>
-        </div>
-      </form>
     </div>
   </div>
 </body>

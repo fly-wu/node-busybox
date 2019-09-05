@@ -41,27 +41,23 @@ html, body {
   border: 1px solid gray;
   display: inline-block;
 }
-
-.section.form {
+.container .form .form-item.form-sheet .form-item-content {
   width: 600px;
   margin: 0px auto;
   font-size: 12px;
   color: black;
 }
-
-.section.form .title {
+.container .form .form-item.form-sheet .form-item-content .title {
   font-weight: bold;
   font-size: 18px;
   text-align: center;
   margin-bottom: 12px;
 }
-
-.section.form .the-form .form-item {
+.container .form .form-item.form-sheet .form-item-content .the-form .form-item {
   display: flex;
   margin-bottom: 10px;
 }
-
-.section.form .the-form .form-item .label {
+.container .form .form-item.form-sheet .form-item-content .the-form .form-item .label {
   width: 240px;
   font-size: 14px;
   line-height: 22px;
@@ -71,23 +67,19 @@ html, body {
   box-sizing: border-box;
   padding-right: 10px;
 }
-
-.section.form .the-form .form-item .content {
+.container .form .form-item.form-sheet .form-item-content .the-form .form-item .content {
   flex: 1;
   box-sizing: border-box;
 }
-
-.section.form .the-form .form-item.footer {
+.container .form .form-item.form-sheet .form-item-content .the-form .form-item.footer {
   display: flex;
 }
-
-.section.form .the-form .form-item.footer .item {
+.container .form .form-item.form-sheet .form-item-content .the-form .form-item.footer .item {
   flex: 1;
   text-align: center;
 }
-
-.section.form .the-form input[type=text],
-.section.form .the-form textarea {
+.container .form .form-item.form-sheet .form-item-content .the-form input[type=text],
+.container .form .form-item.form-sheet .form-item-content .the-form textarea {
   font-size: 14px;
   line-height: 16px;
   background-color: rgba(255, 255, 255, 0.5);

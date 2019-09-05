@@ -44,54 +44,57 @@ html, body {
           display: inline-block;
         }
       }
+      &.form-sheet {
+        .form-item-content {
+          width: 600px;
+          margin: 0px auto;
+          font-size: 12px;
+          color: black;
+          .title {
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 12px;
+          }
+          .the-form .form-item {
+            display: flex;
+            margin-bottom: 10px;
+          }
+          .the-form .form-item .label {
+            width: 240px;
+            font-size: 14px;
+            line-height: 22px;
+            text-align: right;
+            font-weight: bold;
+            color: black;
+            box-sizing: border-box;
+            padding-right: 10px;
+          }
+          .the-form .form-item .content {
+            flex: 1;
+            box-sizing: border-box;
+          }
+          .the-form .form-item.footer {
+            display: flex;
+          }
+          .the-form .form-item.footer .item {
+            flex: 1;
+            text-align: center;
+          }
+          .the-form input[type="text"],
+          .the-form textarea {
+            font-size: 14px;
+            line-height: 16px;
+            background-color: rgba(255, 255, 255, .5);
+            width: 100%;
+            box-sizing: border-box;
+            padding: 2px;
+          }
+        }
+      }
     }
   }
 }
 
 
-.section.form {
-  width: 600px;
-  margin: 0px auto;
-  font-size: 12px;
-  color: black;
-}
-.section.form .title {
-  font-weight: bold;
-  font-size: 18px;
-  text-align: center;
-  margin-bottom: 12px;
-}
-.section.form .the-form .form-item {
-  display: flex;
-  margin-bottom: 10px;
-}
-.section.form .the-form .form-item .label {
-  width: 240px;
-  font-size: 14px;
-  line-height: 22px;
-  text-align: right;
-  font-weight: bold;
-  color: black;
-  box-sizing: border-box;
-  padding-right: 10px;
-}
-.section.form .the-form .form-item .content {
-  flex: 1;
-  box-sizing: border-box;
-}
-.section.form .the-form .form-item.footer {
-  display: flex;
-}
-.section.form .the-form .form-item.footer .item {
-  flex: 1;
-  text-align: center;
-}
-.section.form .the-form input[type="text"],
-.section.form .the-form textarea {
-  font-size: 14px;
-  line-height: 16px;
-  background-color: rgba(255, 255, 255, .5);
-  width: 100%;
-  box-sizing: border-box;
-  padding: 2px;
-}
+
