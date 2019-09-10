@@ -514,7 +514,7 @@ module.exports = class NodeUtils extends Common {
 
 
   async showRequestProcess(config = {}) {
-    config = this.deepMerge({
+    config = Object.assign({
       path: '/',
       method: 'get',
       headers: {
@@ -540,6 +540,7 @@ module.exports = class NodeUtils extends Common {
           console.log(err);
         }
       } else {
+        console.log(err);
       }
     }
     if (axiosResponse) {
