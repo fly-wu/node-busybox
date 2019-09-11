@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const childProcess = require('child_process');
 const crypto = require('crypto');
-const busybox = require('../');
-const commander = busybox.commander;
-const nodeUtils = busybox.utils.node;
+const path = require('path');
+const childProcess = require('child_process');
+const commander = require('commander');
+const nodeUtils = require('../utils/node');
 
 commander.command('ps').action(() => {
   const cmdPS = nodeUtils.spawnCmdPS();
@@ -28,6 +28,14 @@ commander.command('kill <pid>').action(async (pid) => {
 
 commander.command('md5 <content>').action(async (content) => {
   console.log(crypto.createHash('md5').update(content).digest('hex'))
+});
+
+commander.command('lines-count <dir>').action(async dir => {
+  require('../tools/commands/lines-count.js')(dir);
+});
+
+commander.command('ssl-keys <domain>').action(async domain => {
+  require('../tools/commands/ssl-keys/generator.js')(domain);
 });
 
 // commander
