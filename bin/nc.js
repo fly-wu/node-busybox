@@ -32,9 +32,34 @@ commander.command('md5 <content>').action(async (content) => {
   console.log(crypto.createHash('md5').update(content).digest('hex'))
 });
 
-commander.command('lines-count <dir>').action(async dir => {
-  require('../tools/commands/lines-count.js')(dir);
-});
+commander.command('lines-count <dir>')
+  .description('show lines count of all files under a directory')
+  .action(async dir => {
+    require('../tools/commands/lines-count.js')(dir);
+  });
+
+commander.command('find <key>')
+  .description('find file by key ')
+  .option('-d, --dir <directory>', 'data to post', '.')
+  .action(async (key, command) => {
+    var {dir} = command;
+    dir = path.resolve(dir);
+    console.log(`searching dir: ${dir}`);
+    console.log('');
+    const readDirRecursive = require('fs-readdir-recursive');
+    const fileList = readDirRecursive(dir);
+    const reg = new RegExp(key);
+    const result = fileList.filter(it => {
+      return reg.test(it);
+    });
+    if (result.length === 0) {
+      console.log('not found');
+    } else {
+      console.log(`${result.length} files found:`);
+      result.forEach(it => console.log(it));
+    }
+  });
+
 
 commander.command('ssl-keys <domain>').action(async domain => {
   require('../tools/commands/ssl-keys/generator.js')(domain);
