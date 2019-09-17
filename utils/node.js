@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const net = require('net');
+const url = require('url');
 const path = require('path');
 const http = require('http');
 const childProcess = require('child_process');
@@ -10,9 +11,8 @@ const Common = require('./common.js');
 const HOME_PATH = process.env["HOME"];
 
 module.exports = class NodeUtils extends Common {
-  constructor(busybox) {
+  constructor() {
     super();
-    this.busybox = busybox;
   }
 
   // 等待ms毫秒
@@ -544,8 +544,13 @@ module.exports = class NodeUtils extends Common {
       }
     }
     if (axiosResponse) {
-      console.log(' ---request headers--- ');
-      console.log(axiosResponse.request.getHeaders());
+      console.log(' --- request --- ');
+      const config = axiosResponse.config;
+      const urlObject = url.parse(config.url);
+      console.log(`${config.method.toUpperCase()} ${urlObject.path} ${urlObject.protocol}`);
+      console.log(config.headers);
+      console.log(config.data ? config.data : '');
+      // console.log(axiosResponse.request.getHeaders());
       console.log(' ---response general--- ');
       console.log(`${axiosResponse.status} ${axiosResponse.statusText}`);
       console.log(' ---response headers--- ');
