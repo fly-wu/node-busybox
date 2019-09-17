@@ -129,6 +129,7 @@ module.exports = class KoaServer {
         // maxAge: 365 * 24 * 60 * 60,
         // buffer: true,
         dynamic: true,
+        preload: false,
         dirContent(stat) {
           return utils.node.getDirContentInFormOfHtml(stat.path)
         }
@@ -152,6 +153,7 @@ module.exports = class KoaServer {
       // buffer: true,
       // gzip: true,
       dynamic: true,
+      preload: false,
       dirContent(stat) {
         return utils.node.getDirContentInFormOfHtml(stat.path)
       }
