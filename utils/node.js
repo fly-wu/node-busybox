@@ -82,6 +82,26 @@ module.exports = class NodeUtils extends Common {
     return files
   }
 
+  deleteFile(path) {
+    if (fs.existsSync(path)) {
+      if (fs.statSync(path).isFile()) {
+        fs.unlinkSync(path);
+      } else if (fs.statSync(path).isDirectory()) {
+        fs.readdirSync(path).forEach((file, index) => {
+          var curPath = path + "/" + file;
+          if (fs.statSync(curPath).isDirectory()) { // recurse
+            this.deleteFile(curPath);
+          } else { // delete file
+            fs.unlinkSync(curPath);
+          }
+        });
+        fs.rmdirSync(path);
+      }
+    } else {
+      console.log(`Error: path ${path} not exist`);
+    }
+  }
+
   getModulePath(moduleName, currentPath) {
     const pathList = [];
     try {

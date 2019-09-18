@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const readline = require('readline');
 const childProcess = require('child_process');
 const commander = require('commander');
 const NodeUtils = require('../utils/node');
@@ -60,6 +61,48 @@ commander.command('find <key>')
     }
   });
 
+
+commander.command('rm <key>')
+  .description('find file by key ')
+  .option('-d, --dir <directory>', 'data to post', '.')
+  .action(async (key, command) => {
+    var {dir} = command;
+    dir = path.resolve(dir);
+    console.log(`target dir: ${dir}`);
+    console.log('');
+    const readDirRecursive = require('fs-readdir-recursive');
+    if (!fs.statSync(dir).isDirectory()) {
+      console.log(`Error: ${dir} is not directory!`);
+      return;
+    }
+    const reg = new RegExp(key);
+    const fileList = fs.readdirSync(dir).filter(it => reg.test(it));
+    if (fileList.length === 0) {
+      console.log('not file found');
+      return;
+    }
+    console.log('files to delete:');
+    fileList.forEach(it => console.log(it));
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    answer = await new Promise((resolve, reject) => {
+      rl.question('你确定要删除这些文件？(yes/y)', (answer) => {
+        resolve(answer);
+        rl.close();
+      });
+    });
+    if (['yes', 'y'].includes(answer)) {
+      fileList.forEach(it => {
+        nodeUtils.deleteFile(path.resolve(dir, it));
+      });
+      console.log(`finish: ${fileList.length}`);
+    } else {
+      console.log('取消删除');
+    }
+  });
 
 commander.command('ssl-keys <domain>').action(async domain => {
   require('../tools/commands/ssl-keys/generator.js')(domain);
