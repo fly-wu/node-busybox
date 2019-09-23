@@ -1,0 +1,19 @@
+{
+  "name": "spa-server",
+  "version": "1.0.0",
+  "description": "server for fe-spa",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "xifei.wu",
+  "license": "ISC",
+  "dependencies": {
+    "connect-history-api-fallback": "^1.6.0",
+    "debug": "^4.1.1",
+    "koa": "^2.8.1",
+    "koa-cors": "^0.0.16",
+    "koa-static-cache": "^5.1.2",
+    "path-match": "^1.2.4"
+  }
+}
