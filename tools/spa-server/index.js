@@ -22,6 +22,32 @@ class SpaServer {
     if (process.env.LOG_DIR) {
       logDir = process.env.LOG_DIR;
     }
+    if (logDir && fs.statSync(logDir).isDirectory()) {
+      const reg = /^spa-server.(\d{4}-\d{2}-\d{2}).log$/;
+      const filePathList = fs.readdirSync(logDir).filter(it => reg.test(it)).sort((pre, next) => {
+        const preStamp = reg.exec(pre)[1].split('-').join();
+        const nextStamp = reg.exec(next)[1].split('-').join();
+        return pre - next;
+      });
+
+      var fileStatList = filePathList.map(it => fs.statSync(it));
+      var totalSize = fileStatList.reduce((sum, it) => {
+        sum += it.size;
+        return sum;
+      }, 0);
+      while ((totalSize > config.maxLogSize) && filePathList.length > 1) {
+        let filePath = filePathList.shift();
+        let stat = fileStatList.shift();
+        fs.unlinkSync(filePath)
+        totalSize = fileStatList.reduce((sum, it) => {
+          sum += it.size;
+          return sum;
+        }, 0);
+      }
+      // console.log(filePathList);
+      // console.log(fileStatList);
+      // console.log(totalSize);
+    }
     createDebug.getState().setConfigs({
       debug: 'spa-server',
       useColors: logDir ? false : true,
@@ -193,7 +219,7 @@ class SpaServer {
     config = Object.assign({
       port: 6001,
       healthCheck: true,
-      maxLogSize: '1G'
+      maxLogSize: 1024 * 1024 * 1024
     }, config);
     this.setDebug(config);
     debug(config);
