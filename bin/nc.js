@@ -47,7 +47,7 @@ commander.command('find <key>')
     dir = path.resolve(dir);
     console.log(`searching dir: ${dir}`);
     console.log('');
-    const readDirRecursive = require('fs-readdir-recursive');
+    const readDirRecursive = require('fs-readdir-recursive/with-dir');
     const fileList = readDirRecursive(dir);
     const reg = new RegExp(key);
     const result = fileList.filter(it => {
@@ -98,7 +98,7 @@ commander.command('rm <key>')
       fileList.forEach(it => {
         nodeUtils.deleteFile(path.resolve(dir, it));
       });
-      console.log(`finish: ${fileList.length}`);
+      console.log(`deleted: ${fileList.length}`);
     } else {
       console.log('取消删除');
     }
