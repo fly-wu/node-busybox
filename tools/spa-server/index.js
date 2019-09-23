@@ -22,13 +22,24 @@ class SpaServer {
     if (process.env.LOG_DIR) {
       logDir = process.env.LOG_DIR;
     }
-    if (logDir && fs.statSync(logDir).isDirectory()) {
+    createDebug.getState().setConfigs({
+      debug: 'spa-server',
+      useColors: logDir ? false : true,
+      toFile: logDir ? path.resolve(logDir, 'spa-server') : null
+    });
+    if (!logDir || !fs.existsSync(logDir) || !fs.statSync(logDir).isDirectory()) {
+      return;
+    }
+    try {
       const reg = /^spa-server.(\d{4}-\d{2}-\d{2}).log$/;
       const filePathList = fs.readdirSync(logDir).filter(it => reg.test(it)).sort((pre, next) => {
         const preStamp = reg.exec(pre)[1].split('-').join();
         const nextStamp = reg.exec(next)[1].split('-').join();
         return pre - next;
-      });
+      }).map(it => path.resolve(logDir, it));
+      if (filePathList.length === 0) {
+        return;
+      }
 
       var fileStatList = filePathList.map(it => fs.statSync(it));
       var totalSize = fileStatList.reduce((sum, it) => {
@@ -47,12 +58,9 @@ class SpaServer {
       // console.log(filePathList);
       // console.log(fileStatList);
       // console.log(totalSize);
+    } catch (err) {
+      debug(err);
     }
-    createDebug.getState().setConfigs({
-      debug: 'spa-server',
-      useColors: logDir ? false : true,
-      toFile: logDir ? path.resolve(logDir, 'spa-server') : null
-    });
   }
 
   // 跨域配置
