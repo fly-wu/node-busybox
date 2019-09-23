@@ -1,35 +1,63 @@
+const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const Koa = require('koa');
 const cors = require('koa-cors');
-const pathMatch = require('path-match');
+const PathMatch = require('path-match');
 const staticCache = require('koa-static-cache');
-const koaProxy = require('@paas/koa-custom-proxy');
+const httpProxy = require('http-proxy');
 
-const debug = require('debug')('spa-server');
-debug.getState().setConfigs({
-  debug: 'spa-server:*',
-  useColors: true,        // false
-  toFile: path.resolve(__dirname, 'log.file')
-});
+const createDebug = require('debug');
 
-const L = require('format-logger')({});
+const debug = createDebug('spa-server');
+
+var proxy = httpProxy.createServer();
 
 class SpaServer {
   constructor() {
   }
 
+  setDebug(config) {
+    var logDir = config.logDir;
+    if (process.env.LOG_DIR) {
+      logDir = process.env.LOG_DIR;
+    }
+    createDebug.getState().setConfigs({
+      debug: 'spa-server',
+      useColors: logDir ? false : true,
+      toFile: logDir ? path.resolve(logDir, 'spa-server') : null
+    });
+  }
+
   // 跨域配置
   setCors(app) {
     app.use(cors({
-      methods: 'GET,HEAD,PUT,POST,DELETE,PATCH'
+      allowMethods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
     }));
   }
 
   // 捕获异常
-  catchError(app) {
+  setLogger(app) {
     // catch error in outer middleware
     app.use(async (ctx, next) => {
+      const start = Date.now();
+      // debug('<--', ctx.method, ctx.url);
+
+      const res = ctx.res
+
+      const onfinish = done.bind(null, 'finish')
+      const onclose = done.bind(null, 'close')
+
+      res.once('finish', onfinish)
+      res.once('close', onclose)
+
+      function done (event) {
+        res.removeListener('finish', onfinish)
+        res.removeListener('close', onclose)
+        debug('-->', ctx.method, ctx.url, ctx.status, `[${Date.now() - start}ms]`)
+        // log(print, ctx, start, counter ? counter.length : length, null, event)
+      }
+
       try {
         await next();
       } catch (err) {
@@ -45,7 +73,7 @@ class SpaServer {
       return;
     }
     app.use(async(ctx, next) => {
-      if (['/health', '/healthcheck', '/healthCheck'].includes(ctx.req.url.toLowerCase())) {
+      if (['/health', '/healthcheck', '/health-check'].includes(ctx.url.toLowerCase())) {
         ctx.status = 200;
         ctx.body = 'server aliving';
       } else {
@@ -58,7 +86,12 @@ class SpaServer {
    * Koa Http Proxy Middleware
    */
   proxyMiddleware (matchPath, config) {
-    const pathReg = pathToRegexp(matchPath);
+    const pathMatch = PathMatch({
+      // path-to-regexp options
+      sensitive: false,
+      strict: false,
+      end: false,
+    })(matchPath);
     return async(ctx, next) => {
       if (!config.hasOwnProperty('target') || !config.hasOwnProperty('changeOrigin')) {
         return await next();
@@ -93,15 +126,16 @@ class SpaServer {
           if (status) {
             ctx.status = status;
           }
-          L('error =>', err);
+          debug(err);
+          ctx.respond = false;
+          reject(err);
           // resolve();
         });
         proxy.once('end', () => {
           let duration = Date.now() - start;
-          if (logs) {
-            debug(ctx.req.method, ctx.req.oldPath, 'to', target + ctx.req.url, `[${duration}ms]`);
-          }
-          // resolve();
+          // debug('proxy', ctx.req.method, ctx.req.oldPath, 'to', target + ctx.req.url, `[${duration}ms]`);
+          ctx.respond = false;
+          resolve();
         })
       });
     }
@@ -112,9 +146,8 @@ class SpaServer {
     if (!config.proxy) {
       return;
     }
-    for (let path in config.proxy) {
-      var config = config.proxy[path];
-      app.use(proxyMiddleware(path, config));
+    for (let key in config.proxy) {
+      app.use(this.proxyMiddleware(key, config.proxy[key]));
     }
   }
 
@@ -136,7 +169,7 @@ class SpaServer {
       return;
     }
     const addStatic = (dir) => {
-      if (!fs.existSync(dir)) {
+      if (!fs.existsSync(dir)) {
         return;
       }
       app.use(staticCache(dir, {
@@ -159,14 +192,15 @@ class SpaServer {
   start(config) {
     config = Object.assign({
       port: 6001,
-      staticPath: path.join(__dirname, 'dist'),
-      healthCheck: true
+      healthCheck: true,
+      maxLogSize: '1G'
     }, config);
-    console.log(config);
+    this.setDebug(config);
+    debug(config);
 
     const app = new Koa();
     this.setCors(app);
-    this.catchError(app);
+    this.setLogger(app, config);
     this.setHealthCheck(app, config);
     this.setProxy(app, config);
     this.setStatic(app, config);
