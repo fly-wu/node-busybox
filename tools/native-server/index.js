@@ -6,7 +6,7 @@ const Stream = require('stream');
 const compose = require('koa-compose');
 const mimeTypes = require('mime-types');
 const formidable = require('formidable');
-const busybox = require('../../');
+const nodeUtils = new (require('../../utils/node.js'));
 
 class NativeServer {
   constructor(options = {
@@ -217,7 +217,7 @@ class NativeServer {
     const {req, res, urlObj} = ctx;
     const pathname = urlObj.pathname;
     if (pathname.startsWith('/assets')) {
-      const targetFile = busybox.utils.node.findClosestFile(this.CURRENT_WORK_DIR, pathname.replace('/', ''));
+      const targetFile = nodeUtils.findClosestFile(this.CURRENT_WORK_DIR, pathname.replace('/', ''));
       if (!fs.existsSync(targetFile)) {
         ctx.status = 200;
         ctx.type = 'html';
@@ -238,7 +238,7 @@ class NativeServer {
       } else if (statInfo.isFile()) {
         ctx.type = targetFile.split('.').pop();
       }
-      const fileStream = await busybox.utils.node.getFileContentInFormOfStream(targetFile);
+      const fileStream = await nodeUtils.getFileContentInFormOfStream(targetFile);
       // console.log(`${targetFile}: ${fileStream}`);
       if (fileStream) {
         ctx.status = 200;
@@ -280,7 +280,7 @@ class NativeServer {
     } else if (statInfo.isFile()) {
       ctx.type = targetFile.split('.').pop();
     }
-    const fileStream = await busybox.utils.node.getFileContentInFormOfStream(targetFile);
+    const fileStream = await nodeUtils.getFileContentInFormOfStream(targetFile);
     // console.log(`${targetFile}: ${fileStream}`);
     if (fileStream) {
       ctx.status = 200;
@@ -329,9 +329,9 @@ class NativeServer {
   }
 
   async start() {
-    const ip = busybox.utils.node.getLocalIP();
+    const ip = nodeUtils.getLocalIP();
 
-    var port = await busybox.utils.node.getAFreePort();
+    var port = await nodeUtils.getAFreePort();
     if (process.env.PORT) {
       port = process.env.PORT;
     }
