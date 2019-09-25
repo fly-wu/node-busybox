@@ -40,14 +40,18 @@ commander.command('lines-count <dir>')
   });
 
 commander.command('find <key>')
-  .description('find file by key ')
+  .description('find file by key')
   .option('-d, --dir <directory>', 'data to post', '.')
+  .option('-m, --max-depth <maxDepth>', 'max dir depth', null)
   .action(async (key, command) => {
-    var {dir} = command;
+    var {dir, maxDepth} = command;
     dir = path.resolve(dir);
     console.log(`searching dir: ${dir}`);
     console.log('');
-    const readDirRecursive = require('fs-readdir-recursive/with-dir');
+    const readDirRecursive = require('fs-readdir-recursive/advance')({
+      withDir: true,
+      maxDepth
+    });
     const fileList = readDirRecursive(dir);
     const reg = new RegExp(key);
     const result = fileList.filter(it => {
@@ -63,7 +67,7 @@ commander.command('find <key>')
 
 
 commander.command('rm <key>')
-  .description('find file by key ')
+  .description('rm file by key')
   .option('-d, --dir <directory>', 'data to post', '.')
   .action(async (key, command) => {
     var {dir} = command;
