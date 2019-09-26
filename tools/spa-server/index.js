@@ -10,6 +10,7 @@ const httpProxy = require('http-proxy');
 const createDebug = require('debug');
 
 const debug = createDebug('spa-server');
+const debugProxy = createDebug('spa-server:proxy');
 
 var proxy = httpProxy.createServer();
 
@@ -23,7 +24,7 @@ class SpaServer {
       logDir = process.env.LOG_DIR;
     }
     createDebug.getState().setConfigs({
-      debug: 'spa-server',
+      debug: 'spa-server*',
       useColors: logDir ? false : true,
       toFile: logDir ? path.resolve(logDir, 'spa-server') : null
     });
@@ -167,7 +168,7 @@ class SpaServer {
         });
         proxy.once('end', () => {
           let duration = Date.now() - start;
-          // debug('proxy', ctx.req.method, ctx.req.oldPath, 'to', target + ctx.req.url, `[${duration}ms]`);
+          debugProxy(ctx.req.method, ctx.req.oldPath, 'to', target + ctx.req.url, `[${duration}ms]`);
           ctx.respond = false;
           resolve();
         })
