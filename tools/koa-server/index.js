@@ -73,12 +73,12 @@ module.exports = class KoaServer {
         console.log(err);
       });
       app.UPLOAD_DIR = this.UPLOAD_DIR;
-      await this.setCommonMiddleware(app);
-      await this.setStaticMiddleware(app);
-      await this.parseByFormidable(app);
-      // await this.setRouter(app);
-      await this.setAssistMiddleware(app);
-      await this.handlePost(app);
+      this.setCommonMiddleware(app);
+      this.setStaticMiddleware(app);
+      this.parseByFormidable(app);
+      await this.setRouter(app);
+      this.setAssistMiddleware(app);
+      this.handlePost(app);
       app.listen(port);
       console.log(`started: ${origin}`);
       return app;
