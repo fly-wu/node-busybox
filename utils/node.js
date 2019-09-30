@@ -295,8 +295,8 @@ module.exports = class NodeUtils extends Common {
     return localIP;
   }
 
-  // 获取一个未被使用的端口（从3000端口开始）
-  async getAFreePort() {
+  // 获取一个未被使用的端口（默认从3000端口开始）
+  async getAFreePort(startPort = 3000) {
     async function tryPort(port) {
       const server = net.createServer().listen(port);
       const result = await new Promise((resolve,reject) => {
@@ -314,8 +314,7 @@ module.exports = class NodeUtils extends Common {
       });
       return result;
     }
-    const START_PORT = 3000;
-    var port = START_PORT;
+    var port = startPort;
     var result = await tryPort(port);
     while (result === null) {
       port += 1;
