@@ -2,27 +2,27 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib')
 const Stream = require('stream');
-const Koa = require('koa');
 
 // NOTICE: 
-const utils = require('../../../utils');
+const nodeUtils = new (require('../../../utils/node'))();
 
 // 注意require('koa-router')返回的是函数:
 const router = require('koa-router')();
 
+// handle data of body before sent
 async function handleBody(ctx, next) {
   var body = ctx.body;
   if (!body) {
     return next();
   }
-  if (utils.node.isPlainObject(body)) {
+  if (nodeUtils.isPlainObject(body)) {
     body = JSON.stringify(body);
   }
   if (Buffer.isBuffer(body)) {
     body = body.toString();
   }
   if ('string' == typeof body) {
-    body = utils.node.toStream(body);
+    body = nodeUtils.toStream(body);
   }
   if (body instanceof Stream) {
     if (ctx.acceptsEncodings('gzip') === 'gzip' && (ctx.get['content-encoding'] !== 'gzip')) {
@@ -53,11 +53,11 @@ async function handleBody(ctx, next) {
   }
   
   if (slow) {
-    const slowTransform = utils.node.slowStream(1024, 500);
+    const slowTransform = nodeUtils.slowStream(1024, 500);
     body = body.pipe(slowTransform);
   }
   if (logWait) {
-    await utils.node.waitMilliSeconds(logWait * 1000);
+    await nodeUtils.waitMilliSeconds(logWait * 1000);
   }
 
   ctx.body = body;
@@ -75,11 +75,11 @@ router.get('/api/test/get/common', async(ctx, next) => {
     switch (extension) {
       case 'xml':
         ctx.type = 'xml';
-        body = utils.node.toStream('<div>this is a div</div>');
+        body = nodeUtils.toStream('<div>this is a div</div>');
         break;
       case 'png':
         ctx.type = 'png';
-        body = fs.createReadStream(utils.node.findClosestFile(__dirname, 'assets/imgs/gnu-icon-small.png'));
+        body = fs.createReadStream(nodeUtils.findClosestFile(__dirname, 'assets/imgs/gnu-icon-small.png'));
         break;
       case 'js':
         ctx.type = 'js';
@@ -92,7 +92,7 @@ router.get('/api/test/get/common', async(ctx, next) => {
         body = fs.createReadStream(path.resolve(__dirname, 'router.js'));
         break;
       default:
-        body = utils.node.toStream(ctx.url);
+        body = nodeUtils.toStream(ctx.url);
         break;
     }
     return body;
@@ -102,9 +102,8 @@ router.get('/api/test/get/common', async(ctx, next) => {
   handleBody(ctx, next);
 });
 
-
 router.post('/api/test/post/common', async(ctx, next) => {
-  ctx.assert(ctx.request.body, 200, utils.node.error({
+  ctx.assert(ctx.request.body, 200, nodeUtils.error({
     msg: 'body not found'
   }));
 
@@ -123,7 +122,7 @@ router.post('/api/test/post/common', async(ctx, next) => {
       var ext = path.extname(file.name);
       const basename = path.basename(file.name, ext);
       // ext = ext.replace(/(\.[a-z0-9]+).*/i, '$1');
-      fs.writeFileSync(path.resolve(uploadDir, `${file.hash}.${basename}.${ext}`), file.data);
+      fs.writeFileSync(path.resolve(uploadDir, `${file.hash}.${basename}${ext}`), file.data);
     });
   }
   ctx.type = 'json';
@@ -134,7 +133,7 @@ router.post('/api/test/post/common', async(ctx, next) => {
 
 router.all('/api/test/echo', async(ctx, next) => {
   // ctx.request.data is get by parsedByFormidable
-  const buf = ctx.request.data ? ctx.request.data : await utils.node.getStreamData(ctx.req);
+  const buf = ctx.request.data ? ctx.request.data : await nodeUtils.getStreamData(ctx.req);
   // console.log(ctx.req.headers)
   // console.log(buf.toString());
   ctx.type = 'json';
@@ -165,7 +164,7 @@ module.exports = router;
 
 // app.listen(3001);
 
-// const keysPath = busybox.utils.node.node.findClosestFile(__dirname, 'assets/files/https-keys');
+// const keysPath = busybox.nodeUtils.node.findClosestFile(__dirname, 'assets/files/https-keys');
 // var options = {
 //   key: fs.readFileSync(path.resolve(keysPath, 'server-key.pem')),
 //   cert: fs.readFileSync(path.resolve(keysPath, 'server-cert.pem')),

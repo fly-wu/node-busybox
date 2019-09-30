@@ -6,7 +6,7 @@ const Koa = require('koa');
 const router = require('koa-router')();
 const formidable = require('formidable');
 const staticCache = require('koa-static-cache');
-const utils = require('../../utils');
+const nodeUtils = new (require('../../utils/node'))();
 
 
 // const debug = require('debug');
@@ -66,18 +66,19 @@ module.exports = class KoaServer {
 
   async start() {
     try {
-      const port = this.PORT ? this.PORT : (await utils.node.getAFreePort());
+      const port = this.PORT ? this.PORT : (await nodeUtils.getAFreePort());
       const origin = `http://127.0.0.1:${port}`;
       const app = new Koa();
       app.on('error', err => {
         console.log(err);
       });
       app.UPLOAD_DIR = this.UPLOAD_DIR;
-      this.setCommonMiddleware(app);
-      this.setStaticMiddleware(app);
-      this.parseByFormidable(app);
-      this.setAssistMiddleware(app);
-      this.handlePost(app);
+      await this.setCommonMiddleware(app);
+      await this.setStaticMiddleware(app);
+      await this.parseByFormidable(app);
+      // await this.setRouter(app);
+      await this.setAssistMiddleware(app);
+      await this.handlePost(app);
       app.listen(port);
       console.log(`started: ${origin}`);
       return app;
@@ -109,7 +110,7 @@ module.exports = class KoaServer {
       }
     };
     if (this.provideService.assets) {
-      const dirList = utils.node.findFileListByNameUpward(__dirname, 'assets');
+      const dirList = nodeUtils.findFileListByNameUpward(__dirname, 'assets');
       dirList.forEach(it => {
         app.use(staticCache(it, {
           prefix: '/assets',
@@ -117,7 +118,7 @@ module.exports = class KoaServer {
           // buffer: true,
           dynamic: true,
           dirContent(stat) {
-            return 'utils.node.getDirContentInFormOfHtml(stat.path)'
+            return 'nodeUtils.getDirContentInFormOfHtml(stat.path)'
           }
         }, fileStore));
       });
@@ -131,7 +132,7 @@ module.exports = class KoaServer {
         dynamic: true,
         preload: false,
         dirContent(stat) {
-          return utils.node.getDirContentInFormOfHtml(stat.path)
+          return nodeUtils.getDirContentInFormOfHtml(stat.path)
         }
       }));
     }
@@ -141,6 +142,10 @@ module.exports = class KoaServer {
     // Object.keys(fileStore.fileMap).forEach(it => {
     //   fs.appendFileSync(fileListPath, `${it}\n`);
     // });
+  }
+
+  setRouter(app) {
+    app.use(require('./router').routes());
   }
 
   setAssistMiddleware(app) {
@@ -155,7 +160,7 @@ module.exports = class KoaServer {
       dynamic: true,
       preload: false,
       dirContent(stat) {
-        return utils.node.getDirContentInFormOfHtml(stat.path)
+        return nodeUtils.getDirContentInFormOfHtml(stat.path)
       }
     }));
     app.use(require('./assist/router').routes());
@@ -234,6 +239,8 @@ module.exports = class KoaServer {
         // console.log(fileList);
       }
 
+      // request.body refers to multipart data parsed by formidable
+      // request.data refers to origin data posted by client
       ctx.request.body = multipart;
       ctx.request.data = originData;
       await next();
