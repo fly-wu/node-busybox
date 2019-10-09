@@ -1,6 +1,5 @@
 const path = require('path');
-const busybox = require('../../..');
-const Monitor = busybox['forever-monitor'];
+const Monitor = require('forever-monitor');
 
 const script = path.resolve(__dirname, 'penetrate-fortress.js');
 
