@@ -1,6 +1,5 @@
-const busybox = require('../../../');
-const nodeUtils = busybox.utils.node;
-const bytes = busybox.bytes;
+const nodeUtils = new (require('../../../utils/node'))();
+const bytes = require('bytes');
 
 class Test {
   getThreadInfoByPid() {
@@ -14,7 +13,35 @@ class Test {
     console.log(keys.join('\t'));
     setInterval(showDetail, 1000);
   }
+
+  deepMerge() {
+    const obj1 = {
+      a: 1,
+      o: {
+        aa: 4
+      }
+    };
+    const obj2 = {
+      b: 2,
+      o: {
+        bb: 6
+      }
+    };
+    const obj3 = {
+      c: 3,
+      o: {
+        bb: 8
+      },
+      f() {},
+      d: new Date()
+    }
+    const obj = nodeUtils.deepMerge(obj1, obj2, obj3);
+    console.log(obj1);
+    console.log(obj2);
+    console.log(obj);
+  }
 }
 
 const obj = new Test();
-obj.getThreadInfoByPid();
+// obj.getThreadInfoByPid();
+obj.deepMerge();

@@ -565,7 +565,9 @@
     merge(/* obj1, obj2, obj3, ... */) {
       var result = {};
       function assignValue(val, key) {
-        if (typeof result[key] === 'object' && typeof val === 'object') {
+        if (this.isDate(val)) {
+          result[key] = val;
+        } else if (typeof result[key] === 'object' && typeof val === 'object') {
           result[key] = merge(result[key], val);
         } else {
           result[key] = val;
@@ -589,7 +591,9 @@
     deepMerge(/* obj1, obj2, obj3, ... */) {
       var result = {};
       const assignValue = (val, key) => {
-        if (typeof result[key] === 'object' && typeof val === 'object') {
+        if (this.isDate(val)) {
+          result[key] = val;
+        } else if (typeof result[key] === 'object' && typeof val === 'object') {
           result[key] = this.deepMerge(result[key], val);
         } else if (typeof val === 'object') {
           result[key] = this.deepMerge({}, val);

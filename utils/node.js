@@ -533,7 +533,7 @@ module.exports = class NodeUtils extends Common {
 
 
   async showRequestProcess(config = {}) {
-    config = Object.assign({
+    config = this.deepMerge({
       path: '/',
       method: 'get',
       headers: {
@@ -545,7 +545,7 @@ module.exports = class NodeUtils extends Common {
     const net = new axios.Helper({
       headers: {
         common: {
-          tag: 'request from busybox.utils.node.showResponse'
+          tag: 'utils.node.showRequestProcess'
         }
       }
     });
