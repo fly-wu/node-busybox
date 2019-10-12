@@ -118,8 +118,9 @@ module.exports = class KoaServer {
           // maxAge: 365 * 24 * 60 * 60,
           // buffer: true,
           dynamic: true,
+          preload: false,
           dirContent(stat) {
-            return 'nodeUtils.getDirContentInFormOfHtml(stat.path)'
+            return Buffer.from(nodeUtils.getDirContentInFormOfHtml(stat.path))
           }
         }, fileStore));
       });
@@ -133,7 +134,7 @@ module.exports = class KoaServer {
         dynamic: true,
         preload: false,
         dirContent(stat) {
-          return nodeUtils.getDirContentInFormOfHtml(stat.path)
+          return Buffer.from(nodeUtils.getDirContentInFormOfHtml(stat.path))
         }
       }));
     }
@@ -161,7 +162,7 @@ module.exports = class KoaServer {
       dynamic: true,
       preload: false,
       dirContent(stat) {
-        return nodeUtils.getDirContentInFormOfHtml(stat.path)
+        return Buffer.from(nodeUtils.getDirContentInFormOfHtml(stat.path))
       }
     }));
     app.use(require('./assist/router').routes());
