@@ -298,8 +298,10 @@ module.exports = class NodeUtils extends Common {
   // 获取一个未被使用的端口（默认从3000端口开始）
   async getAFreePort(startPort = 3000) {
     async function tryPort(port) {
-      const server = net.createServer().listen(port);
-      const result = await new Promise((resolve,reject) => {
+      var resolve = null;
+      var reject = null;
+      try {
+        const server = net.createServer().listen(port);
         server.on('listening', () => {
           server.close();
           resolve(port);
@@ -308,11 +310,16 @@ module.exports = class NodeUtils extends Common {
           if (err.code === 'EADDRINUSE') {
             resolve(null);
           } else {
-            resolve(err);
+            resolve(null);
           }
-        })
+        });
+      } catch (err) {
+        resolve(null);
+      }
+      return new Promise((...args) => {
+        resolve = args[0];
+        reject = args[1];
       });
-      return result;
     }
     var port = startPort;
     var result = await tryPort(port);
