@@ -593,6 +593,26 @@ module.exports = class NodeUtils extends Common {
     const caPath = path.resolve(__dirname, '../tools/commands/ssl-keys/rootCA.crt');
     return fs.readFileSync(caPath);
   }
+  getCrt(domain) {
+    const crtPath = path.resolve(__dirname, `../tools/commands/ssl-keys/${domain}.crt`);
+    try {
+      fs.statSync(crtPath)
+    } catch (err) {
+      console.log(err);
+      return err
+    }
+    return fs.readFileSync(crtPath);
+  }
+  getKeyPem(domain) {
+    const keyPath = path.resolve(__dirname, `../tools/commands/ssl-keys/${domain}.key.pem`);
+    try {
+      fs.statSync(keyPath)
+    } catch (err) {
+      console.log(err);
+      return err
+    }
+    return fs.readFileSync(keyPath);
+  }
 
   error({code, content, msg}) {
     const status = {
