@@ -3,7 +3,7 @@
   "description": "frequently used tools(code)",
   "version": "0.1.0",
   "bin": {
-    "nc": "./bin/nc.js",
+    "nh": "./bin/nh.js",
     "node-server": "./bin/node-server.js",
     "koa-server": "./bin/koa-server.js"
   }
