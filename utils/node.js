@@ -589,6 +589,10 @@ module.exports = class NodeUtils extends Common {
     return axiosResponse;
   }
 
+  getRootCA() {
+    const caPath = path.resolve(__dirname, '../tools/commands/ssl-keys/rootCA.crt');
+    return fs.readFileSync(caPath);
+  }
 
   error({code, content, msg}) {
     const status = {

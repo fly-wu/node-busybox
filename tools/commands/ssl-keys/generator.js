@@ -65,8 +65,8 @@ function createFakeCertificateByDomain(caKey, caCert, domain) {
     {
       name: 'subjectAltName',
       altNames: [{
-        type: 2,
-        value: domain
+        type: 7,
+        ip: domain
       }]
     },
     {
