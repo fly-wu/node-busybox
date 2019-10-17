@@ -10,7 +10,7 @@ const httpProxy = require('node-http-proxy');
 const createDebug = require('debug');
 createDebug.getState().setConfigs({
   debug: '*',
-  useColors: true,
+  useColors: false,
   toFile: path.resolve(__dirname, 'logs/proxy.log')
 });
 debug = createDebug('penetrate-fortress');
@@ -19,6 +19,9 @@ const proxy = httpProxy.createServer();
 
 class Proxy {
   constructor() {
+    proxy.on('error', err => {
+      this.log(err);
+    });
   }
 
   log() {
