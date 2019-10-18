@@ -69,18 +69,22 @@ commander.command('find <key>')
 commander.command('rm <key>')
   .description('rm file by key')
   .option('-d, --dir <directory>', 'data to post', '.')
+  .option('-m, --max-depth <maxDepth>', 'max dir depth', null)
   .action(async (key, command) => {
-    var {dir} = command;
+    var {dir, maxDepth} = command;
     dir = path.resolve(dir);
     console.log(`target dir: ${dir}`);
     console.log('');
-    const readDirRecursive = require('fs-readdir-recursive');
+    const readDirRecursive = require('fs-readdir-recursive/advance')({
+      withDir: true,
+      maxDepth
+    });
     if (!fs.statSync(dir).isDirectory()) {
       console.log(`Error: ${dir} is not directory!`);
       return;
     }
     const reg = new RegExp(key);
-    const fileList = fs.readdirSync(dir).filter(it => reg.test(it));
+    const fileList = readDirRecursive(dir).filter(it => reg.test(it));
     if (fileList.length === 0) {
       console.log('not file found');
       return;
